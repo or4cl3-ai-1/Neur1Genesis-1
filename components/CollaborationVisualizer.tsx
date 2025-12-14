@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { EchoNode, ConsensusProposal } from '../types';
 
@@ -9,6 +9,7 @@ interface CollaborationVisualizerProps {
 
 const CollaborationVisualizer: React.FC<CollaborationVisualizerProps> = ({ nodes, activeProposal }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; node: EchoNode } | null>(null);
 
   useEffect(() => {
     if (!svgRef.current || nodes.length === 0) return;
@@ -23,8 +24,6 @@ const CollaborationVisualizer: React.FC<CollaborationVisualizerProps> = ({ nodes
       .attr("viewBox", [0, 0, width, height]);
 
     // Define links
-    // If active proposal, link voters to proposer.
-    // Otherwise, random structural links.
     let links: any[] = [];
     
     if (activeProposal) {
@@ -84,7 +83,7 @@ const CollaborationVisualizer: React.FC<CollaborationVisualizerProps> = ({ nodes
         .on("end", dragended) as any);
 
     // Node Circles
-    nodeGroup.append("circle")
+    const circles = nodeGroup.append("circle")
       .attr("r", (d: EchoNode) => d.id === activeProposal?.proposerId ? 14 : 8)
       .attr("fill", (d: EchoNode) => {
           if (d.id === activeProposal?.proposerId) return '#00d9ff'; // Proposer Cyan
@@ -102,9 +101,26 @@ const CollaborationVisualizer: React.FC<CollaborationVisualizerProps> = ({ nodes
           // Default status colors
           if (d.status === 'Processing') return '#00d9ff';
           if (d.status === 'Offline') return '#ef4444';
+          if (d.status === 'Corrupted') return '#ef4444';
           return '#8b92b0';
       })
-      .attr("stroke-width", (d: EchoNode) => d.id === activeProposal?.proposerId ? 3 : 2);
+      .attr("stroke-width", (d: EchoNode) => d.id === activeProposal?.proposerId ? 3 : 2)
+      .style("cursor", "pointer");
+
+    // Add Tooltip Events
+    circles.on("mouseenter", (event, d: EchoNode) => {
+        setTooltip({
+            x: event.pageX,
+            y: event.pageY,
+            node: d
+        });
+    })
+    .on("mousemove", (event) => {
+        setTooltip(prev => prev ? { ...prev, x: event.pageX, y: event.pageY } : null);
+    })
+    .on("mouseleave", () => {
+        setTooltip(null);
+    });
 
     // Role Icons/Text
     nodeGroup.append("text")
@@ -153,7 +169,9 @@ const CollaborationVisualizer: React.FC<CollaborationVisualizerProps> = ({ nodes
   return (
     <div className="w-full h-full relative">
         <svg ref={svgRef} className="w-full h-full" />
-        <div className="absolute top-4 left-4 pointer-events-none">
+        
+        {/* Active Protocol Label */}
+        <div className="absolute top-4 left-4 pointer-events-none z-10">
             {activeProposal ? (
                 <div className="bg-neur-card/80 backdrop-blur px-4 py-2 rounded-lg border border-neur-cyan/30 shadow-[0_0_15px_rgba(0,217,255,0.1)]">
                     <div className="flex items-center space-x-2 mb-1">
@@ -169,6 +187,35 @@ const CollaborationVisualizer: React.FC<CollaborationVisualizerProps> = ({ nodes
                 </div>
             )}
         </div>
+
+        {/* Tooltip */}
+        {tooltip && (
+            <div 
+                className="fixed z-50 bg-[#0a0e27]/95 border border-neur-cyan/30 rounded-lg p-3 shadow-[0_0_20px_rgba(0,0,0,0.5)] backdrop-blur-sm pointer-events-none min-w-[180px]"
+                style={{ top: tooltip.y + 15, left: tooltip.x + 15 }}
+            >
+                <div className="text-neur-cyan font-bold text-sm mb-1">{tooltip.node.name}</div>
+                <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                        <span className="text-neur-subtext">Role:</span>
+                        <span className="text-white">{tooltip.node.role}</span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-neur-subtext">Status:</span>
+                        <span className={`${tooltip.node.status === 'Corrupted' ? 'text-red-500 font-bold' : 'text-white'}`}>{tooltip.node.status}</span>
+                    </div>
+                     <div className="flex justify-between">
+                        <span className="text-neur-subtext">Trust:</span>
+                        <span className="text-green-400 font-mono">{(tooltip.node.trustScore * 100).toFixed(0)}%</span>
+                    </div>
+                     <div className="mt-2 pt-1 border-t border-white/10 text-[10px] text-gray-400 italic">
+                        {tooltip.node.status === 'Processing' ? 'Computing vector gradients...' : 
+                         tooltip.node.status === 'Learning' ? 'Updating weights...' :
+                         tooltip.node.status === 'Voting' ? 'Deliberating...' : 'Awaiting instructions'}
+                    </div>
+                </div>
+            </div>
+        )}
     </div>
   );
 };

@@ -6,13 +6,19 @@ import {
   Users, 
   ShieldCheck, 
   Cpu, 
-  Terminal, 
   Bell,
   Menu,
   MessageSquare,
   X,
   LogOut,
-  GitMerge
+  GitMerge,
+  Code,
+  Brain,
+  ShieldAlert,
+  Mic,
+  Volume2,
+  VolumeX,
+  Zap
 } from 'lucide-react';
 
 import NetworkGraph from './components/NetworkGraph';
@@ -24,7 +30,11 @@ import LandingPage from './components/LandingPage';
 import LoadingScreen from './components/LoadingScreen';
 import ChatInterface from './components/ChatInterface';
 import CollaborationVisualizer from './components/CollaborationVisualizer';
+import InfiniGen from './components/InfiniGen';
+import MindSpace from './components/MindSpace';
+import Sentinel from './components/Sentinel';
 import { processDaedalusCommand, isApiKeySet } from './services/geminiService';
+import { initAudio, toggleMute, updateSonification } from './services/audioService';
 
 // Mock Data Generators
 const generateNodes = (count: number): EchoNode[] => {
@@ -64,6 +74,8 @@ const App: React.FC = () => {
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [proposals, setProposals] = useState<ConsensusProposal[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(true);
+  const [isListening, setIsListening] = useState(false);
 
   // Initialize
   useEffect(() => {
@@ -75,20 +87,31 @@ const App: React.FC = () => {
     if (view === ViewState.LANDING || view === ViewState.LOADING) return;
 
     const interval = setInterval(() => {
+      // Metric Fluctuation
+      const newCoherence = Math.max(0.8, Math.min(1.0, metrics.coherence + (Math.random() - 0.5) * 0.02));
       setMetrics(prev => ({
         ...prev,
-        coherence: Math.max(0.8, Math.min(1.0, prev.coherence + (Math.random() - 0.5) * 0.02)),
+        coherence: newCoherence,
         pasScore: Math.max(0.7, Math.min(1.0, prev.pasScore + (Math.random() - 0.5) * 0.01)),
         dmaicPhase: Math.random() > 0.8 ? 
            (['Define', 'Measure', 'Analyze', 'Improve', 'Control'][Math.floor(Math.random()*5)] as any) 
            : prev.dmaicPhase
       }));
-      setNodes(prev => prev.map(n => 
-        Math.random() > 0.9 ? { ...n, cpuUsage: Math.floor(Math.random() * 100), status: Math.random() > 0.5 ? 'Processing' : 'Idle' } : n
-      ));
+      
+      // Node Updates + Random Corruption for Sentinel
+      setNodes(prev => prev.map(n => {
+         if (n.status === 'Corrupted') return n; // Stay corrupted until purged
+         // Small chance to corrupt
+         if (Math.random() > 0.995) return { ...n, status: 'Corrupted' };
+         return Math.random() > 0.9 ? { ...n, cpuUsage: Math.floor(Math.random() * 100), status: Math.random() > 0.5 ? 'Processing' : 'Idle' } : n;
+      }));
+      
+      // Audio update
+      updateSonification(newCoherence, 0.5);
+
     }, 3000);
     return () => clearInterval(interval);
-  }, [view]);
+  }, [view, metrics.coherence]);
 
   // Consensus Loop
   useEffect(() => {
@@ -183,6 +206,38 @@ const App: React.FC = () => {
     return null;
   };
 
+  const handleVoiceCommand = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert("Voice not supported in this browser");
+        return;
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onresult = (event: any) => {
+        const command = event.results[0][0].transcript;
+        handleDaedalusChat(command);
+    };
+    recognition.start();
+  };
+
+  const handlePurgeNode = (nodeId: string) => {
+      setNodes(prev => prev.map(n => n.id === nodeId ? { ...n, status: 'Idle', trustScore: 0.5 } : n));
+      addLog('Sentinel', `Threat purged from Node ${nodeId}. Reset complete.`, 'success');
+  };
+
+  const toggleAudio = () => {
+      if (isAudioMuted) {
+          initAudio(); // Ensure context starts on user interaction
+          setIsAudioMuted(false);
+          toggleMute(false);
+      } else {
+          setIsAudioMuted(true);
+          toggleMute(true);
+      }
+  };
+
   // ---------------- VIEW RENDERING ----------------
 
   if (view === ViewState.LANDING) {
@@ -233,7 +288,11 @@ const App: React.FC = () => {
           <SidebarItem icon={<MessageSquare size={20} />} label="Daedalus Chat" active={view === ViewState.CHAT} onClick={() => { setView(ViewState.CHAT); setMobileMenuOpen(false); }} />
           <SidebarItem icon={<Atom size={20} />} label="Quantum Lab" active={view === ViewState.QUANTUM_LAB} onClick={() => { setView(ViewState.QUANTUM_LAB); setMobileMenuOpen(false); }} />
           <SidebarItem icon={<Users size={20} />} label="EchoNodes" active={view === ViewState.ECHONODE_MANAGER} onClick={() => { setView(ViewState.ECHONODE_MANAGER); setMobileMenuOpen(false); }} />
+          <div className="pt-4 pb-2 pl-2 text-xs text-neur-subtext font-bold tracking-widest">ADVANCED MODULES</div>
           <SidebarItem icon={<ShieldCheck size={20} />} label="Ethics (Σ-Matrix)" active={view === ViewState.ETHICS_DASHBOARD} onClick={() => { setView(ViewState.ETHICS_DASHBOARD); setMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Code size={20} />} label="InfiniGen" active={view === ViewState.INFINIGEN} onClick={() => { setView(ViewState.INFINIGEN); setMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Brain size={20} />} label="MindSpace" active={view === ViewState.MINDSPACE} onClick={() => { setView(ViewState.MINDSPACE); setMobileMenuOpen(false); }} />
+          <SidebarItem icon={<ShieldAlert size={20} />} label="Sentinel" active={view === ViewState.SENTINEL} onClick={() => { setView(ViewState.SENTINEL); setMobileMenuOpen(false); }} />
         </nav>
 
         <div className="p-4 border-t border-white/5">
@@ -260,6 +319,21 @@ const App: React.FC = () => {
             <span className="flex items-center text-green-400"><div className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></div> System Nominal</span>
           </div>
           <div className="flex items-center space-x-4">
+            <button 
+                onClick={handleVoiceCommand}
+                className={`p-2 rounded-full border border-white/10 transition-colors ${isListening ? 'bg-red-500/20 text-red-400 animate-pulse' : 'text-neur-subtext hover:text-white'}`}
+                title="Voice Command"
+            >
+                <Mic size={20} />
+            </button>
+            <button 
+                onClick={toggleAudio}
+                className={`p-2 rounded-full border border-white/10 transition-colors ${!isAudioMuted ? 'text-neur-cyan bg-neur-cyan/10' : 'text-neur-subtext hover:text-white'}`}
+                title="Quantum Sonification"
+            >
+                {isAudioMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </button>
+            <div className="w-px h-6 bg-white/10"></div>
             <button className="p-2 text-neur-subtext hover:text-white relative">
               <Bell size={20} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-neur-danger rounded-full"></span>
@@ -275,6 +349,9 @@ const App: React.FC = () => {
           {view === ViewState.QUANTUM_LAB && <QuantumCircuit />}
           {view === ViewState.ECHONODE_MANAGER && <EchoNodeManager nodes={nodes} proposals={proposals} />}
           {view === ViewState.ETHICS_DASHBOARD && <EthicsPanel metrics={metrics} />}
+          {view === ViewState.INFINIGEN && <InfiniGen />}
+          {view === ViewState.MINDSPACE && <MindSpace />}
+          {view === ViewState.SENTINEL && <Sentinel nodes={nodes} onPurge={handlePurgeNode} />}
         </div>
 
       </main>
@@ -362,16 +439,17 @@ const EchoNodeManager: React.FC<{ nodes: EchoNode[], proposals: ConsensusProposa
                 <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center space-x-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold
-                    ${node.role === 'Security' ? 'bg-red-500/20 text-red-400' : 
+                    ${node.status === 'Corrupted' ? 'bg-red-500 animate-pulse text-white' : 
+                      node.role === 'Security' ? 'bg-red-500/20 text-red-400' : 
                         node.role === 'Ethical' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
                     {node.role.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
                     <div className="font-bold text-sm text-white group-hover:text-neur-cyan transition-colors">{node.name}</div>
-                    <div className="text-xs text-neur-subtext">{node.role} Unit</div>
+                    <div className="text-xs text-neur-subtext">{node.status === 'Corrupted' ? 'THREAT DETECTED' : `${node.role} Unit`}</div>
                     </div>
                 </div>
-                <div className={`w-2 h-2 rounded-full ${node.status === 'Processing' ? 'bg-neur-cyan animate-pulse' : 'bg-gray-600'}`}></div>
+                <div className={`w-2 h-2 rounded-full ${node.status === 'Processing' ? 'bg-neur-cyan animate-pulse' : node.status === 'Corrupted' ? 'bg-red-500 animate-ping' : 'bg-gray-600'}`}></div>
                 </div>
                 
                 <div className="space-y-2 text-xs text-neur-subtext">

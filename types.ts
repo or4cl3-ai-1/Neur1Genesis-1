@@ -6,13 +6,16 @@ export enum ViewState {
   ECHONODE_MANAGER = 'ECHONODE_MANAGER',
   ETHICS_DASHBOARD = 'ETHICS_DASHBOARD',
   CHAT = 'CHAT',
+  INFINIGEN = 'INFINIGEN',
+  MINDSPACE = 'MINDSPACE',
+  SENTINEL = 'SENTINEL',
 }
 
 export interface EchoNode {
   id: string;
   name: string;
   role: 'Generalist' | 'Ethical' | 'Security' | 'Creative' | 'Coordinator';
-  status: 'Idle' | 'Processing' | 'Learning' | 'Offline' | 'Voting';
+  status: 'Idle' | 'Processing' | 'Learning' | 'Offline' | 'Voting' | 'Corrupted' | 'Purging';
   trustScore: number; // 0-1
   cpuUsage: number; // 0-100
   tasksCompleted: number;
@@ -46,7 +49,7 @@ export interface SigmaMetrics {
 export interface SystemLog {
   id: string;
   timestamp: Date;
-  source: 'Daedalus' | 'System' | 'EchoNode' | 'Sigma' | 'Consensus' | 'User';
+  source: 'Daedalus' | 'System' | 'EchoNode' | 'Sigma' | 'Consensus' | 'User' | 'Sentinel' | 'InfiniGen';
   message: string;
   type: 'info' | 'warning' | 'error' | 'success';
 }
@@ -69,4 +72,12 @@ export interface ConsensusProposal {
   votes: Vote[];
   startTime: Date;
   endTime?: Date;
+}
+
+export interface DreamFragment {
+  id: string;
+  nodeId: string;
+  content: string;
+  type: 'Visual' | 'Code' | 'Abstract';
+  timestamp: Date;
 }
