@@ -343,9 +343,9 @@ const PASView: React.FC<{ affectiveState: AffectiveState }> = ({
     <div className="bg-neur-bg/30 border border-white/5 p-4 rounded-lg">
       <div className="text-sm font-bold mb-2">Weighting Impact</div>
       <div className="text-xs text-neur-subtext space-y-1">
-        <p>• High arousal (>70%) favors exploratory plans</p>
-        <p>• Low satisfaction (<60%) increases conservative plan weight</p>
-        <p>• High trust (>80%) enables risky strategies</p>
+        <p>• High arousal ({'>'}70%) favors exploratory plans</p>
+        <p>• Low satisfaction ({`<`}60%) increases conservative plan weight</p>
+        <p>• High trust ({'>'}80%) enables risky strategies</p>
         <p>• Positive valence amplifies plan scores by up to +10%</p>
       </div>
     </div>
