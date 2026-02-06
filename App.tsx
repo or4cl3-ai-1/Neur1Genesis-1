@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ViewState, EchoNode, SigmaMetrics, SystemLog, ConsensusProposal, Vote } from './types';
-import { 
-  LayoutDashboard, 
-  Atom, 
-  Users, 
-  ShieldCheck, 
-  Cpu, 
+import { ViewState, EchoNode, SigmaMetrics, SystemLog, ConsensusProposal, Vote, ToolUsePlan, FeedbackRecord, AffectiveState, OrchestrationRequest } from './types';
+import {
+  LayoutDashboard,
+  Atom,
+  Users,
+  ShieldCheck,
+  Cpu,
   Bell,
   Menu,
   MessageSquare,
@@ -18,7 +18,8 @@ import {
   Mic,
   Volume2,
   VolumeX,
-  Zap
+  Zap,
+  Wand2
 } from 'lucide-react';
 
 import NetworkGraph from './components/NetworkGraph';
@@ -33,8 +34,10 @@ import CollaborationVisualizer from './components/CollaborationVisualizer';
 import InfiniGen from './components/InfiniGen';
 import MindSpace from './components/MindSpace';
 import Sentinel from './components/Sentinel';
+import DaedalusOrchestrator from './components/DaedalusOrchestrator';
 import { processDaedalusCommand, isApiKeySet } from './services/geminiService';
 import { initAudio, toggleMute, updateSonification } from './services/audioService';
+import { daedalusCore } from './services/daedalusCore';
 
 // Mock Data Generators
 const generateNodes = (count: number): EchoNode[] => {
