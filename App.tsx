@@ -192,6 +192,61 @@ const App: React.FC = () => {
     }, ...prev].slice(0, 50));
   };
 
+  const handleDaedalusPlan = async (userIntent: string): Promise<string | null> => {
+    try {
+      // Create orchestration request
+      const request: OrchestrationRequest = {
+        id: `request-${Date.now()}`,
+        userIntent,
+        projectContext: 'Neur1Genesis Platform • EchoNode Network • Distributed Consensus',
+        affectiveState,
+        temporalEmbedding: [],
+        ethicalConstraints: daedalusCore.getEthicalConstraints(),
+        timestamp: new Date(),
+      };
+
+      // Execute planning cycle
+      const plan = await daedalusCore.plan(request);
+      setCurrentPlan(plan);
+      addLog('Daedalus', `Planning cycle initiated for: "${userIntent}"`, 'info');
+
+      // Execute the plan
+      const result = await daedalusCore.executePlan(plan);
+      addLog('Daedalus', `Plan executed successfully`, 'success');
+
+      // Simulate feedback collection
+      const postAffectiveState: AffectiveState = {
+        valence: Math.min(1, affectiveState.valence + 0.1),
+        arousal: Math.max(0, affectiveState.arousal - 0.05),
+        engagement: Math.min(1, affectiveState.engagement + 0.15),
+        satisfaction: Math.min(1, affectiveState.satisfaction + 0.1),
+        trust: Math.min(1, affectiveState.trust + 0.05),
+      };
+
+      // Process feedback
+      const feedback = daedalusCore.processFeedback(
+        plan.id,
+        affectiveState,
+        postAffectiveState,
+        {
+          success: true,
+          executionTime: 250,
+          resourcesUsed: 42,
+          errorCount: 0,
+        }
+      );
+
+      setFeedbackHistory(prev => [...prev, feedback]);
+      setAffectiveState(postAffectiveState);
+      addLog('ANAL', `Feedback processed • Satisfaction: ${(feedback.affectiveDelta.satisfaction * 100).toFixed(0)}%`, 'info');
+
+      return result;
+    } catch (error) {
+      addLog('Daedalus', `Planning error: ${error}`, 'error');
+      return null;
+    }
+  };
+
   const handleDaedalusChat = async (message: string): Promise<string | null> => {
     addLog('User', `Command: "${message}"`, 'info');
     if (isApiKeySet()) {
