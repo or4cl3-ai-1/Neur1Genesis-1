@@ -427,6 +427,7 @@ const App: React.FC = () => {
           {view === ViewState.CHAT && <ChatInterface onSendMessage={handleDaedalusChat} logs={logs} />}
           {view === ViewState.QUANTUM_LAB && <QuantumCircuit />}
           {view === ViewState.ECHONODE_MANAGER && <EchoNodeManager nodes={nodes} proposals={proposals} />}
+          {view === ViewState.DAEDALUS_ORCHESTRATOR && <DaedalusOrchestrator currentPlan={currentPlan} feedbackHistory={feedbackHistory} affectiveState={affectiveState} />}
           {view === ViewState.ETHICS_DASHBOARD && <EthicsPanel metrics={metrics} />}
           {view === ViewState.INFINIGEN && <InfiniGen />}
           {view === ViewState.MINDSPACE && <MindSpace />}
