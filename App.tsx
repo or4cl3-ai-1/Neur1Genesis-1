@@ -249,6 +249,14 @@ const App: React.FC = () => {
 
   const handleDaedalusChat = async (message: string): Promise<string | null> => {
     addLog('User', `Command: "${message}"`, 'info');
+
+    // Route through Daedalus planning cycle
+    const daedalusResult = await handleDaedalusPlan(message);
+    if (daedalusResult) {
+      return daedalusResult;
+    }
+
+    // Fallback to gemini service
     if (isApiKeySet()) {
       const result = await processDaedalusCommand(message);
       if (result) {
