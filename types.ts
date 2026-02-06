@@ -9,6 +9,7 @@ export enum ViewState {
   INFINIGEN = 'INFINIGEN',
   MINDSPACE = 'MINDSPACE',
   SENTINEL = 'SENTINEL',
+  DAEDALUS_ORCHESTRATOR = 'DAEDALUS_ORCHESTRATOR',
 }
 
 export interface EchoNode {
