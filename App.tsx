@@ -80,6 +80,17 @@ const App: React.FC = () => {
   const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [isListening, setIsListening] = useState(false);
 
+  // CHATRON 9.0: Daedalus Nexus State
+  const [currentPlan, setCurrentPlan] = useState<ToolUsePlan | null>(null);
+  const [feedbackHistory, setFeedbackHistory] = useState<FeedbackRecord[]>([]);
+  const [affectiveState, setAffectiveState] = useState<AffectiveState>({
+    valence: 0.7,
+    arousal: 0.6,
+    engagement: 0.75,
+    satisfaction: 0.8,
+    trust: 0.85,
+  });
+
   // Initialize
   useEffect(() => {
     setNodes(generateNodes(12));
