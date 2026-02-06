@@ -365,6 +365,8 @@ const App: React.FC = () => {
           <SidebarItem icon={<MessageSquare size={20} />} label="Daedalus Chat" active={view === ViewState.CHAT} onClick={() => { setView(ViewState.CHAT); setMobileMenuOpen(false); }} />
           <SidebarItem icon={<Atom size={20} />} label="Quantum Lab" active={view === ViewState.QUANTUM_LAB} onClick={() => { setView(ViewState.QUANTUM_LAB); setMobileMenuOpen(false); }} />
           <SidebarItem icon={<Users size={20} />} label="EchoNodes" active={view === ViewState.ECHONODE_MANAGER} onClick={() => { setView(ViewState.ECHONODE_MANAGER); setMobileMenuOpen(false); }} />
+          <div className="pt-4 pb-2 pl-2 text-xs text-neur-subtext font-bold tracking-widest">ORCHESTRATION CORE</div>
+          <SidebarItem icon={<Wand2 size={20} />} label="Daedalus Nexus" active={view === ViewState.DAEDALUS_ORCHESTRATOR} onClick={() => { setView(ViewState.DAEDALUS_ORCHESTRATOR); setMobileMenuOpen(false); }} />
           <div className="pt-4 pb-2 pl-2 text-xs text-neur-subtext font-bold tracking-widest">ADVANCED MODULES</div>
           <SidebarItem icon={<ShieldCheck size={20} />} label="Ethics (Σ-Matrix)" active={view === ViewState.ETHICS_DASHBOARD} onClick={() => { setView(ViewState.ETHICS_DASHBOARD); setMobileMenuOpen(false); }} />
           <SidebarItem icon={<Code size={20} />} label="InfiniGen" active={view === ViewState.INFINIGEN} onClick={() => { setView(ViewState.INFINIGEN); setMobileMenuOpen(false); }} />
