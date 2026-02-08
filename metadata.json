@@ -1,5 +1,8 @@
 {
   "name": "Neur1Genesis Platform",
   "description": "A mobile-native, quantum-enhanced AI platform featuring autonomous agents, verifiable ethical governance, and self-evolving code simulation.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
 }
