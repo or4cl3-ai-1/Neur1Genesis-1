@@ -21,10 +21,11 @@ export const isApiKeySet = () => !!apiKey;
  * to manage the system resources or tasks.
  */
 export const processDaedalusCommand = async (command: string) => {
-  if (!apiKey) return null;
+  const client = getAiClient();
+  if (!client) return null;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `You are Daedalus, a quantum-enhanced AI coordinator. Interpret the following command: "${command}". 
       Return a JSON object describing the system action. 
