@@ -24,6 +24,7 @@ import TaskSwarm from './components/TaskSwarm';
 import VisionUplink from './components/VisionUplink';
 import { processDaedalusCommand, isApiKeySet, getProactiveAdvice, generateConversation } from './services/geminiService';
 import { initAudio, toggleMute, updateSonification } from './services/audioService';
+import { daedalusCore } from './services/daedalusCore';
 
 const generateNodes = (count: number): EchoNode[] => {
   const roles: EchoNode['role'][] = ['Generalist', 'Ethical', 'Security', 'Creative', 'Coordinator'];
@@ -303,6 +304,7 @@ const App: React.FC = () => {
           {view === ViewState.VISION_UPLINK && <VisionUplink onInsight={(txt) => addLog('Forecaster', `Visual ground insight: ${txt}`, 'success')} />}
           {view === ViewState.QUANTUM_LAB && <QuantumCircuit />}
           {view === ViewState.ECHONODE_MANAGER && <EchoNodeManager nodes={nodes} proposals={proposals} />}
+          {view === ViewState.DAEDALUS_ORCHESTRATOR && <DaedalusOrchestrator currentPlan={currentPlan} feedbackHistory={feedbackHistory} affectiveState={affectiveState} />}
           {view === ViewState.ETHICS_DASHBOARD && <EthicsPanel metrics={metrics} />}
           {view === ViewState.INFINIGEN && <InfiniGen />}
           {view === ViewState.MINDSPACE && <MindSpace />}

@@ -6,6 +6,8 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
+  const [showChatron, setShowChatron] = useState(false);
+
   return (
     <div className="relative h-screen w-full bg-[#020410] overflow-hidden flex flex-col items-center justify-center text-center px-6 selection:bg-neur-cyan/30">
       {/* Immersive Background */}
@@ -64,6 +66,32 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                 <div className="text-xs text-neur-purple font-bold font-mono">0.942 SIGMA</div>
             </div>
           </div>
+
+          {/* Primary Logo */}
+          <div className={`transition-all duration-500 ${showChatron ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-neur-cyan to-neur-purple flex items-center justify-center shadow-[0_0_30px_rgba(0,217,255,0.4)]">
+              <span className="text-3xl md:text-4xl font-bold text-neur-bg">N1</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="space-y-3">
+          {showChatron && (
+            <div className="text-neur-cyan text-sm md:text-base font-mono tracking-widest font-bold animate-in fade-in">
+              ★ CHATRON 9.0 NEXUS PLATFORM ★
+            </div>
+          )}
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+            <span className="text-white">NEUR</span>
+            <span className="text-neur-cyan">1</span>
+            <span className="text-white">GENESIS</span>
+          </h1>
+          {showChatron && (
+            <div className="text-neur-purple text-sm md:text-base font-mono">
+              Powered by DAEDALUS ORCHESTRATION ENGINE
+            </div>
+          )}
         </div>
         
         <h1 className="text-5xl md:text-8xl font-black tracking-[0.3em] mb-6 text-glow leading-tight">
