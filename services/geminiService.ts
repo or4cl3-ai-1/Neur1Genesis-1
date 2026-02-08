@@ -59,10 +59,11 @@ export const processDaedalusCommand = async (command: string) => {
  * (since we can't run a real QPU here).
  */
 export const simulateQuantumExecution = async (circuitDescription: string) => {
-  if (!apiKey) return null;
+  const client = getAiClient();
+  if (!client) return null;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Simulate the results of this quantum circuit: ${circuitDescription}. 
       Assume an 8-qubit system. Return a JSON with fictitious but realistic probability distribution for the top 3 states and an execution summary.`,
