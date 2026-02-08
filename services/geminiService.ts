@@ -1,7 +1,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const apiKey = process.env.API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || '';
+
+// Lazy-load the AI client only when needed
+let aiInstance: GoogleGenAI | null = null;
+
+const getAiClient = () => {
+  if (!apiKey) return null;
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+};
 
 // Helper to check if API key is set
 export const isApiKeySet = () => !!apiKey;
