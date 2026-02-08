@@ -1,112 +1,68 @@
 # Neur1Genesis Platform
 
-**Version:** 1.0.4-beta
-**Tagline:** *Where quantum intelligence meets ethical autonomy.*
+**Version:** 1.2.0-LATTICE
+**Tagline:** *Unifying Autonomous Agents with Quantum-Verifiable Ethical Governance.*
 
-## Executive Summary
-Neur1Genesis is a mobile-native, quantum-enhanced AI platform featuring autonomous agents (EchoNodes), verifiable ethical governance (Σ-Matrix), and self-evolving code simulation (InfiniGen). It simulates an 8-qubit Hybrid Quantum-Classical Interface (HQCI) to coordinate decentralized agent behavior with provable ethical convergence.
-
-![Neur1Genesis UI](https://via.placeholder.com/800x400?text=Neur1Genesis+Dashboard+Preview)
+## 🧬 Executive Summary
+Neur1Genesis is a mobile-native, quantum-enhanced AI platform that orchestrates a decentralized swarm of autonomous agents (**EchoNodes**) under a verifiable ethical framework (**Σ-Matrix**). By simulating a Hybrid Quantum-Classical Interface (HQCI), the platform provides high-fidelity simulations for code evolution, ethical stress testing, and generative scenario planning.
 
 ---
 
-## 🚀 Key Features
+## 🚀 Advanced AI Capabilities (v1.2)
 
-### 1. HQCI-QSCE (Quantum Engine)
-*   **Circuit Builder**: Interactive drag-and-drop interface for quantum gates (H, X, Y, Z, CNOT, Measure).
-*   **Simulation**: Simulates 8-qubit entanglement and superposition execution.
-*   **Performance**: <800ms latency targets for circuit evaluation.
-*   **Integration**: Uses Google Gemini to predict probabilistic outcomes for complex circuit states.
+### 1. Evolutionary Neural Intelligence
+*   **Neural Evolution Tree**: EchoNodes now feature gamified growth. Agents gain experience through tasks, unlocking specialized skills like *Quantum Tunneling* and *Ethical Resilience*.
+*   **Skill Matrix**: Visual management of agent capabilities with real-time level-up mechanics.
 
-### 2. EchoNodes (Autonomous Agents)
-*   **Swarm Intelligence**: decentralized agents with specialized roles (Generalist, Ethical, Security, Creative, Coordinator).
-*   **Collaboration Visualizer**: Real-time D3.js force-directed graph showing agent communication and consensus formation.
-*   **Trust Metrics**: Dynamic trust scoring based on task completion and ethical alignment.
+### 2. Σ-Matrix Stress Lab
+*   **Black-Swan Simulations**: Proactively test system resilience by injecting events like *Ethical Drift*, *Rogue Agent* scenarios, or *Quantum Coherence Collapse*.
+*   **Resilience Metrics**: Real-time monitoring of how the governance lattice reacts to catastrophic failures.
 
-### 3. Σ-Matrix (Ethical Governance)
-*   **DMAIC Process**: Real-time tracking of Define, Measure, Analyze, Improve, and Control phases.
-*   **Ethical Compass**: Visual radar chart monitoring 5 dimensions: Fairness, Transparency, Accountability, Privacy, and Safety.
-*   **Drift Detection**: Automated alerts when the PAS (Perception-Action-Sentiment) score drops below thresholds.
+### 3. Agentic Task Swarm
+*   **Workflow Orchestrator**: Chain complex multi-agent tasks across the lattice.
+*   **Specialized Node Sync**: Automatically routes requests to the most capable agents (Generalist, Security, Ethical, etc.) for optimized multi-modal output.
 
-### 4. Advanced Modules (New)
-*   **InfiniGen**: A metaprogramming engine that simulates self-evolving code using "quantum genetic" mutations.
-*   **Sentinel**: A gamified threat defense system to detect and purge corrupted nodes from the lattice.
-*   **MindSpace**:
-    *   **DreamStream**: Visualizes the "subconscious" generative output of idle agents.
-    *   **Knowledge Crystal**: Heuristic compression for session storage.
-    *   **Predictive Horizon**: Forecasts system stability 10 minutes into the future.
+### 4. Visionary Multimodal Uplink
+*   **Physical Grounding**: Uses device camera sensors to analyze real-world environments.
+*   **Lattice Alignment**: Analyzes physical inputs to detect quantum interference or system optimization markers in the user's immediate vicinity.
 
-### 5. Daedalus Coordinator
-*   **Natural Language Interface**: Chat with the system using the Daedalus persona (powered by Google Gemini 2.5 Flash).
-*   **Voice Control**: Integrated speech-to-text for hands-free system management.
-*   **System Actions**: Capable of creating nodes, running simulations, and analyzing ethics via text commands.
+### 5. Generative Scenario Forecasting
+*   **High-Reasoning Simulations**: Powered by Gemini 3 Pro, simulate complex future outcomes (Optimal, Critical, Stable).
+*   **Veo-3.1 Visualization**: Renders cinematic video previews of simulated futures using the Veo video generation engine.
 
-### 6. Immersive UX
-*   **Quantum Sonification**: Generative audio engine that translates system coherence into ambient soundscapes.
-*   **Cyberpunk Aesthetics**: High-contrast dark mode, neon accents, and responsive animations.
+### 6. Empathetic Bio-Aura UI
+*   **Sentiment Awareness**: The platform detects user emotion and system health to dynamically shift the UI theme (*Aura*).
+*   **Adaptive Tone**: AI responses (Daedalus) adjust their persona—from Empathetic to Logical—based on the current emotional cadence of the interaction.
 
 ---
 
-## 🛠 Technical Stack
+## 🛠 Core Technical Subsystems
 
-*   **Frontend**: React 19, TypeScript, Vite
-*   **Styling**: Tailwind CSS, Lucide React (Icons)
-*   **Visualization**: D3.js (Network/Topology), Recharts (Metrics/Analytics)
-*   **AI/LLM**: Google GenAI SDK (`@google/genai` - Gemini 2.5 Flash)
-*   **Audio**: Web Audio API (Oscillator/Gain nodes)
+### ⚛️ HQCI Quantum Lab
+*   **8-Qubit Simulation**: Drag-and-drop circuit builder for quantum gates (H, X, Z, T, CNOT).
+*   **Probabilistic Execution**: Real-time analysis of state vectors and circuit fidelity.
 
----
+### ⚖️ Σ-Matrix Governance
+*   **PAS Scoring**: Perception-Action-Sentiment monitoring for provable ethical convergence.
+*   **Explainable AI (XAI)**: Every AI decision includes a technical rationale for transparent accountability.
 
-## 📦 Installation & Setup
-
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/your-org/neur1genesis.git
-    cd neur1genesis
-    ```
-
-2.  **Install dependencies**
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-
-3.  **Configure Environment**
-    Create a `.env` file in the root directory (optional, but required for live AI features):
-    ```env
-    API_KEY=your_google_gemini_api_key_here
-    ```
-    *Note: Without an API key, the system runs in "Simulation Mode" with mock data.*
-
-4.  **Run Development Server**
-    ```bash
-    npm run dev
-    ```
+### 🤖 Daedalus Coordinator
+*   **Multi-Modal Chat**: Integrated text, voice, and vision processing.
+*   **Synthetix TTS**: High-fidelity multi-speaker native audio generation featuring distinct personas for Daedalus and the System Core.
 
 ---
 
-## 🖥 Application Structure
-
-*   **Dashboard**: Main HUD showing topology, compass, and active consensus.
-*   **Quantum Lab**: Circuit builder and execution results.
-*   **EchoNode Manager**: Detailed agent view and collaboration mesh.
-*   **Ethics Dashboard**: Deep dive into Σ-Matrix metrics.
-*   **Daedalus Chat**: LLM interaction layer.
-*   **MindSpace / Sentinel / InfiniGen**: Specialized subsystems.
+## 💻 Technical Stack
+*   **Framework**: React 19 (ESM)
+*   **AI Engine**: Google Gemini 3 (Pro/Flash/Veo/TTS)
+*   **Visualization**: D3.js (Topology), Recharts (Analytics), HTML5 Canvas (DreamStream)
+*   **Styling**: Tailwind CSS (Cyberpunk/Glassmorphism)
+*   **Audio**: Web Audio API (Quantum Sonification)
 
 ---
 
-## 🛡 Security & Privacy
-*   **Local Processing**: Audio analysis and visualization logic run client-side.
-*   **Simulation Mode**: The app functions fully without external API calls if preferred.
-*   **Sentinel Module**: Simulates "viral load" and threat purging within the agent network.
+## 🛡 Security & Ethics
+Neur1Genesis prioritizes **Verifiable Autonomy**. All generative outputs are grounded in the Σ-Matrix ethical core, with real-time drift detection to prevent misaligned agent behavior.
 
 ---
-
-## 📄 License
-MIT License. See `LICENSE` for details.
-
----
-
-*Neur1Genesis - Pioneering the future of AI on mobile devices.*
+*Neur1Genesis: The Genesis of Autonomous Ethical Intelligence.*

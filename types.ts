@@ -1,3 +1,4 @@
+
 export enum ViewState {
   LANDING = 'LANDING',
   LOADING = 'LOADING',
@@ -9,6 +10,18 @@ export enum ViewState {
   INFINIGEN = 'INFINIGEN',
   MINDSPACE = 'MINDSPACE',
   SENTINEL = 'SENTINEL',
+  SCENARIO_PLANNER = 'SCENARIO_PLANNER',
+  EVOLUTION_TREE = 'EVOLUTION_TREE',
+  STRESS_TEST = 'STRESS_TEST',
+  TASK_SWARM = 'TASK_SWARM',
+  VISION_UPLINK = 'VISION_UPLINK'
+}
+
+export interface NodeSkill {
+  name: string;
+  level: number;
+  unlocked: boolean;
+  description: string;
 }
 
 export interface EchoNode {
@@ -16,16 +29,19 @@ export interface EchoNode {
   name: string;
   role: 'Generalist' | 'Ethical' | 'Security' | 'Creative' | 'Coordinator';
   status: 'Idle' | 'Processing' | 'Learning' | 'Offline' | 'Voting' | 'Corrupted' | 'Purging';
-  trustScore: number; // 0-1
-  cpuUsage: number; // 0-100
+  trustScore: number;
+  cpuUsage: number;
   tasksCompleted: number;
+  level: number;
+  experience: number;
+  skills: NodeSkill[];
 }
 
 export interface QuantumGate {
   id: string;
-  type: 'H' | 'X' | 'Y' | 'Z' | 'CNOT' | 'M';
+  type: 'H' | 'X' | 'Y' | 'Z' | 'CNOT' | 'M' | 'T';
   qubit: number;
-  targetQubit?: number; // For CNOT
+  targetQubit?: number;
   timeStep: number;
 }
 
@@ -49,7 +65,7 @@ export interface SigmaMetrics {
 export interface SystemLog {
   id: string;
   timestamp: Date;
-  source: 'Daedalus' | 'System' | 'EchoNode' | 'Sigma' | 'Consensus' | 'User' | 'Sentinel' | 'InfiniGen';
+  source: 'Daedalus' | 'System' | 'EchoNode' | 'Sigma' | 'Consensus' | 'User' | 'Sentinel' | 'InfiniGen' | 'Forecaster' | 'StressLab';
   message: string;
   type: 'info' | 'warning' | 'error' | 'success';
 }
@@ -80,4 +96,28 @@ export interface DreamFragment {
   content: string;
   type: 'Visual' | 'Code' | 'Abstract';
   timestamp: Date;
+}
+
+export interface ScenarioOutcome {
+  id: string;
+  title: string;
+  description: string;
+  probability: number;
+  impactScore: number;
+  requirements: string[];
+  videoUri?: string;
+}
+
+export interface SentimentData {
+  score: number;
+  detectedMood: string;
+  recommendedTone: string;
+}
+
+export interface SwarmTask {
+  id: string;
+  title: string;
+  chain: string[];
+  status: 'Pending' | 'In-Progress' | 'Completed';
+  output?: string;
 }
