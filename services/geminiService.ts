@@ -100,10 +100,11 @@ export const simulateQuantumExecution = async (circuitDescription: string) => {
  * Generates an ethical analysis report based on current metrics.
  */
 export const analyzeEthicalDrift = async (metrics: any) => {
-  if (!apiKey) return null;
+  const client = getAiClient();
+  if (!client) return null;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Analyze the following ethical metrics for the Neur1Genesis platform: ${JSON.stringify(metrics)}.
       Provide a short "Sigma-Matrix" governance report identifying potential drift or confirming stability.`,
