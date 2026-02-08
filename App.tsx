@@ -1,25 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
-import { ViewState, EchoNode, SigmaMetrics, SystemLog, ConsensusProposal, Vote, ToolUsePlan, FeedbackRecord, AffectiveState, OrchestrationRequest } from './types';
-import {
-  LayoutDashboard,
-  Atom,
-  Users,
-  ShieldCheck,
-  Cpu,
-  Bell,
-  Menu,
-  MessageSquare,
-  X,
-  LogOut,
-  GitMerge,
-  Code,
-  Brain,
-  ShieldAlert,
-  Mic,
-  Volume2,
-  VolumeX,
-  Zap,
-  Wand2
+import { ViewState, EchoNode, SigmaMetrics, SystemLog, ConsensusProposal, Vote, SwarmTask } from './types';
+import { 
+  LayoutDashboard, Atom, Users, ShieldCheck, Cpu, Menu, MessageSquare, X, LogOut, GitMerge, Code, Brain, ShieldAlert, Mic, Volume2, VolumeX, Zap, TrendingUp, Settings, Activity, Network, Bell, Camera, GitBranch, Award, Flame, AlertTriangle, ArrowRight
 } from 'lucide-react';
 
 import NetworkGraph from './components/NetworkGraph';
@@ -34,12 +17,15 @@ import CollaborationVisualizer from './components/CollaborationVisualizer';
 import InfiniGen from './components/InfiniGen';
 import MindSpace from './components/MindSpace';
 import Sentinel from './components/Sentinel';
-import DaedalusOrchestrator from './components/DaedalusOrchestrator';
-import { processDaedalusCommand, isApiKeySet } from './services/geminiService';
+import ScenarioPlanner from './components/ScenarioPlanner';
+import EvolutionTree from './components/EvolutionTree';
+import StressTestLab from './components/StressTestLab';
+import TaskSwarm from './components/TaskSwarm';
+import VisionUplink from './components/VisionUplink';
+import { processDaedalusCommand, isApiKeySet, getProactiveAdvice, generateConversation } from './services/geminiService';
 import { initAudio, toggleMute, updateSonification } from './services/audioService';
 import { daedalusCore } from './services/daedalusCore';
 
-// Mock Data Generators
 const generateNodes = (count: number): EchoNode[] => {
   const roles: EchoNode['role'][] = ['Generalist', 'Ethical', 'Security', 'Creative', 'Coordinator'];
   return Array.from({ length: count }).map((_, i) => ({
@@ -49,498 +35,431 @@ const generateNodes = (count: number): EchoNode[] => {
     status: Math.random() > 0.8 ? 'Processing' : Math.random() > 0.9 ? 'Offline' : 'Idle',
     trustScore: 0.7 + Math.random() * 0.3,
     cpuUsage: Math.floor(Math.random() * 60) + 10,
-    tasksCompleted: Math.floor(Math.random() * 500)
+    tasksCompleted: Math.floor(Math.random() * 500),
+    level: 1,
+    experience: 0,
+    skills: [
+      { name: 'Neural Grounding', level: 1, unlocked: true, description: 'Direct synaptic link to lattice core.' },
+      { name: 'Ethical Resilience', level: 0, unlocked: false, description: 'Increased immunity to biased dataset injection.' },
+      { name: 'Quantum Tunneling', level: 0, unlocked: false, description: 'Ability to bypass local processing bottlenecks.' }
+    ]
   }));
 };
 
-const POSSIBLE_PROPOSALS = [
-    { topic: "Resource Reallocation", desc: "Shift computation to Sector 7 for anomaly analysis." },
-    { topic: "Containment Protocol", desc: "Isolate Node-84 due to ethical drift variance > 0.05." },
-    { topic: "Knowledge Sync", desc: "Initiate global update of Shared Belief Model v4.2." },
-    { topic: "Entropy Reduction", desc: "Active cooling of quantum states to improve fidelity." },
-    { topic: "Heuristic Upgrade", desc: "Deploy new search algorithm to Creative nodes." }
-];
+interface Message {
+  id: string;
+  sender: 'user' | 'system';
+  text: string;
+  timestamp: Date;
+  rationale?: string;
+  sentiment?: { score: number, mood: string };
+}
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>(ViewState.LANDING);
   const [nodes, setNodes] = useState<EchoNode[]>([]);
   const [metrics, setMetrics] = useState<SigmaMetrics>({
-    coherence: 0.98,
-    pasScore: 0.94,
-    fairness: 0.95,
-    transparency: 0.92,
-    accountability: 0.96,
-    privacy: 0.99,
-    safety: 0.97,
-    dmaicPhase: 'Control'
+    coherence: 0.98, pasScore: 0.94, fairness: 0.95, transparency: 0.92, accountability: 0.96, privacy: 0.99, safety: 0.97, dmaicPhase: 'Control'
   });
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [proposals, setProposals] = useState<ConsensusProposal[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(true);
   const [isListening, setIsListening] = useState(false);
+  const [proactiveAdvice, setProactiveAdvice] = useState<any>(null);
+  const [globalSentiment, setGlobalSentiment] = useState(1); // 1 is healthy, -1 is critical
+  const [chatMessages, setChatMessages] = useState<Message[]>([
+    {
+      id: 'init',
+      sender: 'system',
+      text: "Greetings. I am Daedalus, your Quantum Coordinator. I am now tuned to your emotional cadence. How shall we evolve the platform today?",
+      timestamp: new Date()
+    }
+  ]);
 
-  // CHATRON 9.0: Daedalus Nexus State
-  const [currentPlan, setCurrentPlan] = useState<ToolUsePlan | null>(null);
-  const [feedbackHistory, setFeedbackHistory] = useState<FeedbackRecord[]>([]);
-  const [affectiveState, setAffectiveState] = useState<AffectiveState>({
-    valence: 0.7,
-    arousal: 0.6,
-    engagement: 0.75,
-    satisfaction: 0.8,
-    trust: 0.85,
-  });
-
-  // Initialize
   useEffect(() => {
     setNodes(generateNodes(12));
   }, []);
 
-  // Main Simulation Loop
   useEffect(() => {
     if (view === ViewState.LANDING || view === ViewState.LOADING) return;
-
     const interval = setInterval(() => {
-      // Metric Fluctuation
       const newCoherence = Math.max(0.8, Math.min(1.0, metrics.coherence + (Math.random() - 0.5) * 0.02));
       setMetrics(prev => ({
         ...prev,
         coherence: newCoherence,
         pasScore: Math.max(0.7, Math.min(1.0, prev.pasScore + (Math.random() - 0.5) * 0.01)),
-        dmaicPhase: Math.random() > 0.8 ? 
-           (['Define', 'Measure', 'Analyze', 'Improve', 'Control'][Math.floor(Math.random()*5)] as any) 
-           : prev.dmaicPhase
       }));
-      
-      // Node Updates + Random Corruption for Sentinel
-      setNodes(prev => prev.map(n => {
-         if (n.status === 'Corrupted') return n; // Stay corrupted until purged
-         // Small chance to corrupt
-         if (Math.random() > 0.995) return { ...n, status: 'Corrupted' };
-         return Math.random() > 0.9 ? { ...n, cpuUsage: Math.floor(Math.random() * 100), status: Math.random() > 0.5 ? 'Processing' : 'Idle' } : n;
-      }));
-      
-      // Audio update
       updateSonification(newCoherence, 0.5);
-
-    }, 3000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [view, metrics.coherence]);
 
-  // Consensus Loop
   useEffect(() => {
     if (view === ViewState.LANDING || view === ViewState.LOADING) return;
-
-    const interval = setInterval(() => {
-        // Create proposals
-        if (Math.random() > 0.7) {
-            const proposer = nodes[Math.floor(Math.random() * nodes.length)];
-            if (proposer && proposer.status !== 'Offline') {
-                const template = POSSIBLE_PROPOSALS[Math.floor(Math.random() * POSSIBLE_PROPOSALS.length)];
-                const newProp: ConsensusProposal = {
-                    id: Math.random().toString(36).substr(2, 9),
-                    proposerId: proposer.id,
-                    proposerName: proposer.name,
-                    topic: template.topic,
-                    description: template.desc,
-                    status: 'VOTING',
-                    votes: [],
-                    startTime: new Date()
-                };
-                setProposals(prev => [newProp, ...prev].slice(0, 10));
-                addLog('Consensus', `${proposer.name} proposed: ${newProp.topic}`, 'info');
-            }
+    const proactiveInterval = setInterval(async () => {
+      try {
+        const advice = await getProactiveAdvice(metrics);
+        if (advice && advice.alert && advice.alert.trim().length > 0) {
+          setProactiveAdvice(advice);
+          addLog('Forecaster', `PROACTIVE ALERT: ${advice.alert}`, advice.priority === 'HIGH' ? 'warning' : 'info');
         }
-        // Process Votes
-        setProposals(prev => prev.map(prop => {
-            if (prop.status !== 'VOTING') return prop;
-            const unvotedNodes = nodes.filter(n => n.id !== prop.proposerId && n.status !== 'Offline' && !prop.votes.find(v => v.nodeId === n.id));
-            if (unvotedNodes.length > 0) {
-                const voters = unvotedNodes.slice(0, Math.floor(Math.random() * 3) + 1);
-                const newVotes: Vote[] = voters.map(n => ({
-                    nodeId: n.id,
-                    nodeName: n.name,
-                    vote: (n.trustScore < 0.6 ? Math.random() > 0.5 : Math.random() > 0.2) ? 'YES' : 'NO',
-                    weight: n.trustScore,
-                    timestamp: new Date()
-                }));
-                return { ...prop, votes: [...prop.votes, ...newVotes] };
-            }
-            const allVoted = nodes.filter(n => n.status !== 'Offline').length <= prop.votes.length + 1;
-            const timeElapsed = new Date().getTime() - prop.startTime.getTime();
-            if (allVoted || timeElapsed > 8000) {
-                const totalWeight = prop.votes.reduce((acc, v) => acc + v.weight, 0);
-                const yesWeight = prop.votes.filter(v => v.vote === 'YES').reduce((acc, v) => acc + v.weight, 0);
-                const passed = totalWeight > 0 && (yesWeight / totalWeight) > 0.66;
-                if (passed) addLog('Consensus', `Proposal "${prop.topic}" PASSED`, 'success');
-                else addLog('Consensus', `Proposal "${prop.topic}" REJECTED`, 'warning');
-                return { ...prop, status: passed ? 'ACCEPTED' : 'REJECTED', endTime: new Date() };
-            }
-            return prop;
-        }));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [nodes, view]);
+      } catch (e) {
+        console.error("Proactive advice fetch failed", e);
+      }
+    }, 45000);
+    return () => clearInterval(proactiveInterval);
+  }, [view, metrics]);
 
   const addLog = (source: SystemLog['source'], message: string, type: SystemLog['type'] = 'info') => {
-    setLogs(prev => [{
-      id: Math.random().toString(36),
-      timestamp: new Date(),
-      source,
-      message,
-      type
-    }, ...prev].slice(0, 50));
+    setLogs(prev => [{ id: Math.random().toString(36), timestamp: new Date(), source, message, type }, ...prev].slice(0, 50));
   };
 
-  const handleDaedalusPlan = async (userIntent: string): Promise<string | null> => {
-    try {
-      // Create orchestration request
-      const request: OrchestrationRequest = {
-        id: `request-${Date.now()}`,
-        userIntent,
-        projectContext: 'Neur1Genesis Platform • EchoNode Network • Distributed Consensus',
-        affectiveState,
-        temporalEmbedding: [],
-        ethicalConstraints: daedalusCore.getEthicalConstraints(),
-        timestamp: new Date(),
-      };
-
-      // Execute planning cycle
-      const plan = await daedalusCore.plan(request);
-      setCurrentPlan(plan);
-      addLog('Daedalus', `Planning cycle initiated for: "${userIntent}"`, 'info');
-
-      // Execute the plan
-      const result = await daedalusCore.executePlan(plan);
-      addLog('Daedalus', `Plan executed successfully`, 'success');
-
-      // Simulate feedback collection
-      const postAffectiveState: AffectiveState = {
-        valence: Math.min(1, affectiveState.valence + 0.1),
-        arousal: Math.max(0, affectiveState.arousal - 0.05),
-        engagement: Math.min(1, affectiveState.engagement + 0.15),
-        satisfaction: Math.min(1, affectiveState.satisfaction + 0.1),
-        trust: Math.min(1, affectiveState.trust + 0.05),
-      };
-
-      // Process feedback
-      const feedback = daedalusCore.processFeedback(
-        plan.id,
-        affectiveState,
-        postAffectiveState,
-        {
-          success: true,
-          executionTime: 250,
-          resourcesUsed: 42,
-          errorCount: 0,
-        }
-      );
-
-      setFeedbackHistory(prev => [...prev, feedback]);
-      setAffectiveState(postAffectiveState);
-      addLog('ANAL', `Feedback processed • Satisfaction: ${(feedback.affectiveDelta.satisfaction * 100).toFixed(0)}%`, 'info');
-
-      return result;
-    } catch (error) {
-      addLog('Daedalus', `Planning error: ${error}`, 'error');
-      return null;
-    }
-  };
-
-  const handleDaedalusChat = async (message: string): Promise<string | null> => {
+  const handleDaedalusChat = async (message: string, context?: any) => {
     addLog('User', `Command: "${message}"`, 'info');
-
-    // Route through Daedalus planning cycle
-    const daedalusResult = await handleDaedalusPlan(message);
-    if (daedalusResult) {
-      return daedalusResult;
-    }
-
-    // Fallback to gemini service
-    if (isApiKeySet()) {
-      const result = await processDaedalusCommand(message);
-      if (result) {
-        if (result.action === 'create_node') {
-            const newNode: EchoNode = {
-                id: `node-${nodes.length}`,
-                name: `EchoNode-${Math.floor(Math.random()*9000)+1000}`,
-                role: (result.role as any) || 'Generalist',
-                status: 'Learning',
-                trustScore: 0.5,
-                cpuUsage: 10,
-                tasksCompleted: 0
-            };
-            setNodes(prev => [...prev, newNode]);
-            addLog('System', `Created new ${newNode.role} node`, 'success');
-            return result.response || `Acknowledged. Created new ${newNode.role} node.`;
-        }
-        return result.response || "Task executed successfully.";
-      }
-    } else {
-        await new Promise(r => setTimeout(r, 1000));
-        return "Command received. Simulation mode active (No API Key).";
-    }
-    return null;
-  };
-
-  const handleVoiceCommand = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        alert("Voice not supported in this browser");
-        return;
-    }
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onresult = (event: any) => {
-        const command = event.results[0][0].transcript;
-        handleDaedalusChat(command);
+    
+    // Add user message to history
+    const userMsg: Message = {
+      id: Math.random().toString(36),
+      sender: 'user',
+      text: message,
+      timestamp: new Date()
     };
-    recognition.start();
+    setChatMessages(prev => [...prev, userMsg]);
+
+    if (isApiKeySet()) {
+      const result = await processDaedalusCommand(message, context);
+      if (result && result.rawText) {
+        // Extract basic metrics for UI health from raw text if possible
+        const deltaMatch = result.rawText.match(/<delta_check>([\s\S]*?)<\/delta_check>/);
+        const fasMatch = result.rawText.match(/<fas_score>([\s\S]*?)<\/fas_score>/);
+        
+        if (deltaMatch) {
+          const check = deltaMatch[1].trim();
+          if (check === 'CRITICAL') setGlobalSentiment(-0.5);
+          else if (check === 'DRIFTING') setGlobalSentiment(0.2);
+          else setGlobalSentiment(1);
+        }
+
+        const systemMsg: Message = {
+          id: Math.random().toString(36),
+          sender: 'system',
+          text: result.rawText, // Passing rawText to ChatInterface for parsing tags
+          timestamp: new Date()
+        };
+        setChatMessages(prev => [...prev, systemMsg]);
+
+        // Synthesize response if audio is enabled (strip tags for audio)
+        if (!isAudioMuted) {
+          const audioText = result.rawText.replace(/<daedalus_state>[\s\S]*?<\/daedalus_state>/, '').replace(/\[FINAL MANIFESTATION\]/, '').trim();
+          const audioBase64 = await generateConversation(`Daedalus: ${audioText}`);
+          if (audioBase64) {
+            playRawPcm(audioBase64);
+          }
+        }
+        return result;
+      }
+    }
+    
+    const fallbackMsg: Message = {
+      id: Math.random().toString(36),
+      sender: 'system',
+      text: "Consensus protocol initiated. Resource nodes re-syncing.",
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, fallbackMsg]);
+    return { response: fallbackMsg.text };
   };
 
-  const handlePurgeNode = (nodeId: string) => {
-      setNodes(prev => prev.map(n => n.id === nodeId ? { ...n, status: 'Idle', trustScore: 0.5 } : n));
-      addLog('Sentinel', `Threat purged from Node ${nodeId}. Reset complete.`, 'success');
+  const playRawPcm = async (base64: string) => {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    const bytes = atob(base64).split('').map(c => c.charCodeAt(0));
+    const dataInt16 = new Int16Array(new Uint8Array(bytes).buffer);
+    const buffer = audioCtx.createBuffer(1, dataInt16.length, 24000);
+    const channelData = buffer.getChannelData(0);
+    for (let i = 0; i < dataInt16.length; i++) {
+      channelData[i] = dataInt16[i] / 32768.0;
+    }
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start();
   };
 
   const toggleAudio = () => {
-      if (isAudioMuted) {
-          initAudio(); // Ensure context starts on user interaction
-          setIsAudioMuted(false);
-          toggleMute(false);
-      } else {
-          setIsAudioMuted(true);
-          toggleMute(true);
-      }
+      if (isAudioMuted) { initAudio(); setIsAudioMuted(false); toggleMute(false); }
+      else { setIsAudioMuted(true); toggleMute(true); }
   };
 
-  // ---------------- VIEW RENDERING ----------------
+  const themeColor = globalSentiment > 0.5 ? 'rgba(0, 242, 255, 0.1)' : globalSentiment < -0.2 ? 'rgba(244, 63, 94, 0.15)' : 'rgba(139, 92, 246, 0.1)';
 
-  if (view === ViewState.LANDING) {
-    return <LandingPage onStart={() => setView(ViewState.LOADING)} />;
-  }
-
-  if (view === ViewState.LOADING) {
-    return <LoadingScreen onComplete={() => {
-        setView(ViewState.DASHBOARD);
-        addLog('System', 'Neur1Genesis initialized. HQCI Engine Online.', 'success');
-    }} />;
-  }
-
-  // ---------------- MAIN APP LAYOUT ----------------
+  if (view === ViewState.LANDING) return <LandingPage onStart={() => setView(ViewState.LOADING)} />;
+  if (view === ViewState.LOADING) return <LoadingScreen onComplete={() => setView(ViewState.DASHBOARD)} />;
 
   return (
-    <div className="flex h-screen bg-neur-bg text-white font-sans overflow-hidden">
+    <div className={`flex h-screen bg-neur-bg text-neur-text font-sans overflow-hidden select-none transition-colors duration-1000`} style={{ background: `radial-gradient(circle at center, ${themeColor} 0%, #020410 100%)` }}>
       
-      {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-neur-bg/90 backdrop-blur border-b border-white/5 z-50 flex items-center justify-between px-4">
-        <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded bg-gradient-to-br from-neur-cyan to-neur-purple flex items-center justify-center font-bold text-neur-bg">N1</div>
-            <span className="font-bold tracking-wider">NEUR1GENESIS</span>
-        </div>
-        <button onClick={() => setMobileMenuOpen(true)} className="p-2 text-white">
-            <Menu size={24} />
-        </button>
-      </div>
-
-      {/* Sidebar Navigation */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-[#05081a] border-r border-white/5 flex flex-col transition-transform duration-300 ease-in-out
-        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static
-      `}>
-        <div className="p-6 flex items-center justify-between border-b border-white/5 h-16">
-          <div className="flex items-center space-x-3">
-             <div className="w-8 h-8 rounded bg-gradient-to-br from-neur-cyan to-neur-purple flex items-center justify-center font-bold text-neur-bg">N1</div>
-             <span className="font-mono font-bold tracking-wider text-lg lg:block hidden">NEUR<span className="text-neur-cyan">1</span>GENESIS</span>
+      {/* Sidebar - Desktop */}
+      <aside className="hidden lg:flex w-72 glass-panel border-r border-neur-cyan/20 flex-col z-30">
+        <div className="p-8 h-20 flex items-center space-x-4 border-b border-white/5">
+          <LogoIcon className="w-10 h-10" />
+          <div className="flex flex-col">
+            <span className="font-black tracking-[0.3em] text-lg text-glow leading-none">NEUR1GENESIS</span>
+            <span className="text-[9px] text-neur-cyan tracking-[0.5em] mt-1 font-bold">FORGENODE v2.0</span>
           </div>
-          <button onClick={() => setMobileMenuOpen(false)} className="lg:hidden text-neur-subtext">
-            <X size={20} />
-          </button>
         </div>
-
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          <SidebarItem icon={<LayoutDashboard size={20} />} label="Dashboard" active={view === ViewState.DASHBOARD} onClick={() => { setView(ViewState.DASHBOARD); setMobileMenuOpen(false); }} />
-          <SidebarItem icon={<MessageSquare size={20} />} label="Daedalus Chat" active={view === ViewState.CHAT} onClick={() => { setView(ViewState.CHAT); setMobileMenuOpen(false); }} />
-          <SidebarItem icon={<Atom size={20} />} label="Quantum Lab" active={view === ViewState.QUANTUM_LAB} onClick={() => { setView(ViewState.QUANTUM_LAB); setMobileMenuOpen(false); }} />
-          <SidebarItem icon={<Users size={20} />} label="EchoNodes" active={view === ViewState.ECHONODE_MANAGER} onClick={() => { setView(ViewState.ECHONODE_MANAGER); setMobileMenuOpen(false); }} />
-          <div className="pt-4 pb-2 pl-2 text-xs text-neur-subtext font-bold tracking-widest">ORCHESTRATION CORE</div>
-          <SidebarItem icon={<Wand2 size={20} />} label="Daedalus Nexus" active={view === ViewState.DAEDALUS_ORCHESTRATOR} onClick={() => { setView(ViewState.DAEDALUS_ORCHESTRATOR); setMobileMenuOpen(false); }} />
-          <div className="pt-4 pb-2 pl-2 text-xs text-neur-subtext font-bold tracking-widest">ADVANCED MODULES</div>
-          <SidebarItem icon={<ShieldCheck size={20} />} label="Ethics (Σ-Matrix)" active={view === ViewState.ETHICS_DASHBOARD} onClick={() => { setView(ViewState.ETHICS_DASHBOARD); setMobileMenuOpen(false); }} />
-          <SidebarItem icon={<Code size={20} />} label="InfiniGen" active={view === ViewState.INFINIGEN} onClick={() => { setView(ViewState.INFINIGEN); setMobileMenuOpen(false); }} />
-          <SidebarItem icon={<Brain size={20} />} label="MindSpace" active={view === ViewState.MINDSPACE} onClick={() => { setView(ViewState.MINDSPACE); setMobileMenuOpen(false); }} />
-          <SidebarItem icon={<ShieldAlert size={20} />} label="Sentinel" active={view === ViewState.SENTINEL} onClick={() => { setView(ViewState.SENTINEL); setMobileMenuOpen(false); }} />
+        
+        <nav className="flex-1 p-6 space-y-2 overflow-y-auto custom-scrollbar">
+          <NavItem icon={<LayoutDashboard size={18} />} label="DASHBOARD" active={view === ViewState.DASHBOARD} onClick={() => setView(ViewState.DASHBOARD)} />
+          <NavItem icon={<MessageSquare size={18} />} label="DAEDALUS AI" active={view === ViewState.CHAT} onClick={() => setView(ViewState.CHAT)} />
+          <NavItem icon={<TrendingUp size={18} />} label="SCENARIO HUB" active={view === ViewState.SCENARIO_PLANNER} onClick={() => setView(ViewState.SCENARIO_PLANNER)} />
+          
+          <div className="pt-6 pb-2 pl-4 text-[9px] text-neur-subtext font-black tracking-[0.4em] uppercase opacity-40">Intelligence</div>
+          <NavItem icon={<Award size={18} />} label="EVOLUTION" active={view === ViewState.EVOLUTION_TREE} onClick={() => setView(ViewState.EVOLUTION_TREE)} />
+          <NavItem icon={<GitBranch size={18} />} label="TASK SWARM" active={view === ViewState.TASK_SWARM} onClick={() => setView(ViewState.TASK_SWARM)} />
+          <NavItem icon={<Camera size={18} />} label="VISION UPLINK" active={view === ViewState.VISION_UPLINK} onClick={() => setView(ViewState.VISION_UPLINK)} />
+          
+          <div className="pt-6 pb-2 pl-4 text-[9px] text-neur-subtext font-black tracking-[0.4em] uppercase opacity-40">System Core</div>
+          <NavItem icon={<Atom size={18} />} label="QUANTUM LAB" active={view === ViewState.QUANTUM_LAB} onClick={() => setView(ViewState.QUANTUM_LAB)} />
+          <NavItem icon={<Users size={18} />} label="ECHONODES" active={view === ViewState.ECHONODE_MANAGER} onClick={() => setView(ViewState.ECHONODE_MANAGER)} />
+          <NavItem icon={<ShieldCheck size={18} />} label="Σ-MATRIX" active={view === ViewState.ETHICS_DASHBOARD} onClick={() => setView(ViewState.ETHICS_DASHBOARD)} />
+          <NavItem icon={<Flame size={18} />} label="STRESS LAB" active={view === ViewState.STRESS_TEST} onClick={() => setView(ViewState.STRESS_TEST)} />
+          <NavItem icon={<Code size={18} />} label="INFINIGEN" active={view === ViewState.INFINIGEN} onClick={() => setView(ViewState.INFINIGEN)} />
+          <NavItem icon={<Brain size={18} />} label="MINDSPACE" active={view === ViewState.MINDSPACE} onClick={() => setView(ViewState.MINDSPACE)} />
+          <NavItem icon={<ShieldAlert size={18} />} label="SENTINEL" active={view === ViewState.SENTINEL} onClick={() => setView(ViewState.SENTINEL)} />
         </nav>
 
-        <div className="p-4 border-t border-white/5">
-          <button onClick={() => setView(ViewState.LANDING)} className="flex items-center space-x-3 px-4 py-3 text-neur-danger hover:bg-white/5 w-full rounded-lg transition-colors">
-            <LogOut size={20} />
-            <span className="font-medium text-sm">Terminate Session</span>
+        <div className="p-6 border-t border-white/5">
+          <button onClick={() => setView(ViewState.LANDING)} className="flex items-center space-x-4 px-6 py-4 text-neur-danger/80 hover:text-white hover:bg-neur-danger rounded-xl transition-all text-[10px] font-black tracking-[0.3em] border border-neur-danger/20">
+            <LogOut size={16} />
+            <span>TERMINATE</span>
           </button>
         </div>
       </aside>
 
-      {/* Overlay for Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)}></div>
-      )}
-
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative overflow-hidden pt-16 lg:pt-0">
+      {/* Main Container */}
+      <main className="flex-1 flex flex-col relative overflow-hidden">
         
-        {/* Desktop Header */}
-        <header className="hidden lg:flex h-16 border-b border-white/5 bg-neur-bg/50 backdrop-blur-sm items-center justify-between px-6 z-10">
-          <div className="flex items-center text-sm text-neur-subtext space-x-4">
-            <span className="flex items-center"><Cpu size={14} className="mr-1"/> 8 Qubits Active</span>
-            <span className="w-px h-3 bg-white/10"></span>
-            <span className="flex items-center text-green-400"><div className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></div> System Nominal</span>
+        {/* CRITICAL SYSTEM ALERT BANNER */}
+        {proactiveAdvice && (proactiveAdvice.priority === 'HIGH' || proactiveAdvice.priority === 'CRITICAL') && (
+          <div className="bg-neur-danger/30 border-b border-neur-danger/60 p-4 px-8 flex flex-col md:flex-row items-center justify-between z-30 animate-in slide-in-from-top-full duration-500 shadow-[0_10px_30px_rgba(244,63,94,0.2)]">
+            <div className="flex items-center space-x-5 text-neur-danger mb-4 md:mb-0">
+              <div className="p-3 bg-neur-danger/20 rounded-2xl animate-pulse">
+                <ShieldAlert size={28} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black tracking-[0.4em] uppercase opacity-70 leading-tight">Critical System Advisory</span>
+                <span className="text-sm font-black tracking-widest uppercase text-white">{proactiveAdvice.alert}</span>
+                {proactiveAdvice.suggestedAction && (
+                  <span className="text-[10px] text-neur-danger font-bold mt-1 uppercase tracking-wider italic">Action Required: {proactiveAdvice.suggestedAction}</span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center space-x-6">
+              <button 
+                onClick={() => { setView(ViewState.SCENARIO_PLANNER); setProactiveAdvice(null); }}
+                className="bg-neur-danger text-white px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:scale-105 active:scale-95 transition-all shadow-[0_0_25px_rgba(244,63,94,0.6)] flex items-center group"
+              >
+                <span>Initialize Mitigation</span>
+                <ArrowRight size={16} className="ml-3 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button onClick={() => setProactiveAdvice(null)} className="text-white/40 hover:text-white transition-colors p-2">
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <header className="h-16 md:h-20 border-b border-neur-cyan/10 glass-panel flex items-center justify-between px-6 z-20">
+          <div className="flex items-center space-x-4">
+            <button className="lg:hidden p-2 text-neur-cyan" onClick={() => setMobileMenuOpen(true)}><Menu size={24} /></button>
+            <div className="hidden lg:flex items-center text-[10px] font-mono text-neur-subtext space-x-8 tracking-widest uppercase">
+              <span className="flex items-center"><div className={`w-2 h-2 rounded-full mr-2 shadow-[0_0_10px_currentColor] animate-pulse ${globalSentiment < -0.2 ? 'text-neur-danger bg-neur-danger' : 'text-neur-cyan bg-neur-cyan'}`}></div> UPLINK: {globalSentiment < -0.2 ? 'CRITICAL' : 'STABLE'}</span>
+              <span className="flex items-center opacity-60"><Cpu size={14} className="mr-2"/> 8-Q CORE</span>
+              <span className="flex items-center opacity-60"><Activity size={14} className="mr-2"/> PAS: {(metrics.pasScore * 100).toFixed(1)}</span>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
-            <button 
-                onClick={handleVoiceCommand}
-                className={`p-2 rounded-full border border-white/10 transition-colors ${isListening ? 'bg-red-500/20 text-red-400 animate-pulse' : 'text-neur-subtext hover:text-white'}`}
-                title="Voice Command"
-            >
-                <Mic size={20} />
-            </button>
-            <button 
-                onClick={toggleAudio}
-                className={`p-2 rounded-full border border-white/10 transition-colors ${!isAudioMuted ? 'text-neur-cyan bg-neur-cyan/10' : 'text-neur-subtext hover:text-white'}`}
-                title="Quantum Sonification"
-            >
-                {isAudioMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-            </button>
-            <div className="w-px h-6 bg-white/10"></div>
-            <button className="p-2 text-neur-subtext hover:text-white relative">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-neur-danger rounded-full"></span>
-            </button>
-            <div className="w-8 h-8 rounded-full bg-neur-card border border-white/10 flex items-center justify-center text-xs font-mono">OP</div>
+             {proactiveAdvice && (
+               <button 
+                onClick={() => setView(ViewState.SCENARIO_PLANNER)} 
+                className={`hidden md:flex items-center space-x-2 border px-4 py-2 rounded-xl animate-pulse text-[10px] font-black uppercase transition-all
+                  ${proactiveAdvice.priority === 'HIGH' ? 'bg-neur-danger/10 border-neur-danger/40 text-neur-danger' : 'bg-neur-cyan/10 border-neur-cyan/40 text-neur-cyan'}`}
+               >
+                 <Bell size={14} />
+                 <span>Intelligence Hub</span>
+               </button>
+             )}
+             <button onClick={toggleAudio} className={`p-2.5 rounded-full border border-neur-cyan/30 transition-all ${!isAudioMuted ? 'bg-neur-cyan text-neur-bg shadow-[0_0_20px_#00f2ff]' : 'text-neur-subtext'}`}>{isAudioMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
           </div>
         </header>
 
-        {/* View Switcher */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 scroll-smooth relative">
-          {view === ViewState.DASHBOARD && <DashboardView nodes={nodes} metrics={metrics} proposals={proposals} />}
-          {view === ViewState.CHAT && <ChatInterface onSendMessage={handleDaedalusChat} logs={logs} />}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-32 lg:pb-12 relative z-10 custom-scrollbar">
+          {view === ViewState.DASHBOARD && <DashboardView nodes={nodes} metrics={metrics} proposals={proposals} proactiveAdvice={proactiveAdvice} setView={setView} />}
+          {view === ViewState.CHAT && <ChatInterface onSendMessage={handleDaedalusChat} initialMessages={chatMessages} />}
+          {view === ViewState.SCENARIO_PLANNER && <ScenarioPlanner metrics={metrics} addLog={addLog} />}
+          {view === ViewState.EVOLUTION_TREE && <EvolutionTree node={nodes[0]} />}
+          {view === ViewState.STRESS_TEST && <StressTestLab onSimulate={(id) => addLog('StressLab', `Injected black-swan event: ${id}`, 'warning')} />}
+          {view === ViewState.TASK_SWARM && <TaskSwarm />}
+          {view === ViewState.VISION_UPLINK && <VisionUplink onInsight={(txt) => addLog('Forecaster', `Visual ground insight: ${txt}`, 'success')} />}
           {view === ViewState.QUANTUM_LAB && <QuantumCircuit />}
           {view === ViewState.ECHONODE_MANAGER && <EchoNodeManager nodes={nodes} proposals={proposals} />}
           {view === ViewState.DAEDALUS_ORCHESTRATOR && <DaedalusOrchestrator currentPlan={currentPlan} feedbackHistory={feedbackHistory} affectiveState={affectiveState} />}
           {view === ViewState.ETHICS_DASHBOARD && <EthicsPanel metrics={metrics} />}
           {view === ViewState.INFINIGEN && <InfiniGen />}
           {view === ViewState.MINDSPACE && <MindSpace />}
-          {view === ViewState.SENTINEL && <Sentinel nodes={nodes} onPurge={handlePurgeNode} />}
+          {view === ViewState.SENTINEL && <Sentinel nodes={nodes} onPurge={(id) => setNodes(n => n.map(x => x.id === id ? {...x, status: 'Idle'} : x))} />}
         </div>
-
       </main>
+
+      <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} currentView={view} setView={setView} />
+
+      {/* PROACTIVE FORESIGHT TOAST */}
+      {proactiveAdvice && proactiveAdvice.priority !== 'HIGH' && proactiveAdvice.priority !== 'CRITICAL' && (
+        <div className="fixed bottom-24 right-4 z-50 animate-in slide-in-from-right-10 duration-500">
+          <div className="glass-panel border-neur-cyan/40 p-6 rounded-3xl w-80 shadow-[0_20px_60px_rgba(0,0,0,0.6)] relative overflow-hidden group border-l-4 border-l-neur-cyan">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center text-[10px] font-black text-neur-cyan tracking-[0.3em] uppercase">
+                <Zap size={14} className="mr-2 animate-pulse" /> AI Forecast
+              </div>
+              <button onClick={() => setProactiveAdvice(null)} className="text-neur-subtext hover:text-white transition-colors p-1">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-xs text-white mb-5 leading-relaxed font-bold tracking-wide uppercase">{proactiveAdvice.alert}</p>
+            <button 
+              onClick={() => { setView(ViewState.SCENARIO_PLANNER); setProactiveAdvice(null); }}
+              className="w-full py-3.5 bg-neur-cyan/10 border border-neur-cyan/40 rounded-2xl text-[10px] font-black text-neur-cyan tracking-[0.2em] uppercase hover:bg-neur-cyan hover:text-neur-bg transition-all active:scale-95 shadow-[0_0_15px_rgba(0,242,255,0.1)] flex items-center justify-center space-x-2"
+            >
+              <span>Explore Potential Futures</span>
+              <TrendingUp size={14} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// --- Subcomponents ---
-
-const SidebarItem: React.FC<{ icon: React.ReactNode, label: string, active: boolean, onClick: () => void }> = ({ icon, label, active, onClick }) => (
-  <button 
-    onClick={onClick}
-    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 
-      ${active ? 'bg-neur-card text-white shadow-[0_0_15px_rgba(0,217,255,0.1)] border border-white/5' : 'text-neur-subtext hover:bg-white/5 hover:text-white'}`}
-  >
-    <span className={active ? 'text-neur-cyan' : ''}>{icon}</span>
-    <span className="font-medium text-sm">{label}</span>
+const NavItem: React.FC<{ icon: React.ReactNode, label: string, active: boolean, onClick: () => void }> = ({ icon, label, active, onClick }) => (
+  <button onClick={onClick} className={`w-full flex items-center space-x-4 px-5 py-3 rounded-xl transition-all border ${active ? 'bg-neur-cyan/10 text-neur-cyan border-neur-cyan/30 shadow-[0_0_20px_rgba(0,242,255,0.1)]' : 'text-neur-subtext border-transparent hover:text-white hover:bg-white/5'}`}>
+    <span className={`${active ? 'scale-110 drop-shadow-[0_0_10px_#00f2ff]' : ''}`}>{icon}</span>
+    <span className="font-bold text-[10px] tracking-[0.2em]">{label}</span>
   </button>
 );
 
-const DashboardView: React.FC<{ nodes: EchoNode[], metrics: SigmaMetrics, proposals: ConsensusProposal[] }> = ({ nodes, metrics, proposals }) => (
-  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full pb-20 lg:pb-0">
-    {/* Network Graph */}
-    <div className="col-span-1 md:col-span-8 bg-neur-card/30 rounded-xl border border-white/5 p-4 flex flex-col h-[400px] md:h-[500px] relative">
-      <h2 className="text-lg font-bold mb-4 flex items-center"><Atom className="mr-2 text-neur-cyan"/> Live Topology</h2>
-      <NetworkGraph nodes={nodes} />
-      <div className="absolute bottom-6 left-6 text-xs text-neur-subtext font-mono">
-        NODES: {nodes.length} | ACTIVE LINKS: {nodes.length * 2} | LATENCY: 42ms
+const MobileMenu: React.FC<{ isOpen: boolean, onClose: () => void, currentView: ViewState, setView: (v: ViewState) => void }> = ({ isOpen, onClose, currentView, setView }) => (
+  <>
+    {isOpen && <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-40 lg:hidden" onClick={onClose}></div>}
+    <aside className={`fixed inset-y-0 right-0 w-80 glass-panel border-l border-neur-cyan/30 z-50 transform transition-transform duration-500 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className="p-8 border-b border-white/5 flex items-center justify-between">
+        <span className="font-black tracking-[0.4em] text-neur-cyan text-sm">MATRIX</span>
+        <button onClick={onClose} className="p-2 text-neur-subtext"><X size={24} /></button>
       </div>
-    </div>
+      <div className="p-6 space-y-2 overflow-y-auto h-full custom-scrollbar">
+        {[
+          { v: ViewState.DASHBOARD, l: 'Dashboard', i: <LayoutDashboard size={20}/> },
+          { v: ViewState.CHAT, l: 'Daedalus AI', i: <MessageSquare size={20}/> },
+          { v: ViewState.EVOLUTION_TREE, l: 'Evolution', i: <Award size={20}/> },
+          { v: ViewState.VISION_UPLINK, l: 'Vision Uplink', i: <Camera size={20}/> },
+          { v: ViewState.TASK_SWARM, l: 'Task Swarm', i: <GitBranch size={20}/> },
+          { v: ViewState.STRESS_TEST, l: 'Stress Lab', i: <Flame size={20}/> }
+        ].map(item => (
+          <NavItem key={item.v} icon={item.i} label={item.l.toUpperCase()} active={currentView === item.v} onClick={() => { setView(item.v); onClose(); }} />
+        ))}
+      </div>
+    </aside>
+  </>
+);
 
-    {/* Right Column Stats */}
-    <div className="col-span-1 md:col-span-4 space-y-6 flex flex-col">
-      <div className="bg-neur-card rounded-xl border border-white/5 p-4 relative overflow-hidden flex-1 min-h-[250px]">
-        <EthicalCompass metrics={metrics} />
+const DashboardView: React.FC<{ 
+  nodes: EchoNode[], 
+  metrics: SigmaMetrics, 
+  proposals: ConsensusProposal[],
+  proactiveAdvice: any,
+  setView: (v: ViewState) => void
+}> = ({ nodes, metrics, proposals, proactiveAdvice, setView }) => (
+  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-12">
+    {/* PROACTIVE ADVICE BANNER ON DASHBOARD */}
+    {proactiveAdvice && (
+      <div className="col-span-1 md:col-span-12">
+        <div 
+          onClick={() => setView(ViewState.SCENARIO_PLANNER)}
+          className={`group cursor-pointer rounded-3xl border p-8 flex flex-col md:flex-row items-center justify-between transition-all duration-300 relative overflow-hidden shadow-2xl
+            ${proactiveAdvice.priority === 'HIGH' ? 'bg-neur-danger/10 border-neur-danger/40 hover:bg-neur-danger/20' : 'bg-neur-cyan/5 border-neur-cyan/30 hover:bg-neur-cyan/10'}`}
+        >
+          <div className="flex items-center space-x-6 mb-6 md:mb-0 z-10">
+            <div className={`p-5 rounded-3xl ${proactiveAdvice.priority === 'HIGH' ? 'bg-neur-danger text-white' : 'bg-neur-cyan text-neur-bg'} shadow-[0_0_30px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-transform duration-500`}>
+              {proactiveAdvice.priority === 'HIGH' ? <AlertTriangle size={32} /> : <Zap size={32} />}
+            </div>
+            <div>
+              <div className="flex items-center space-x-3 mb-2">
+                <span className={`text-[11px] font-black uppercase tracking-[0.4em] ${proactiveAdvice.priority === 'HIGH' ? 'text-neur-danger' : 'text-neur-cyan'}`}>
+                  {proactiveAdvice.priority || 'System'} Advisory
+                </span>
+                <div className={`w-2 h-2 rounded-full animate-ping ${proactiveAdvice.priority === 'HIGH' ? 'bg-neur-danger' : 'bg-neur-cyan'}`}></div>
+              </div>
+              <h3 className="text-xl font-black text-white tracking-[0.2em] uppercase leading-tight max-w-2xl">{proactiveAdvice.alert}</h3>
+              {proactiveAdvice.suggestedAction && (
+                <p className="text-xs text-neur-subtext mt-2 font-medium tracking-wide">Suggested: {proactiveAdvice.suggestedAction}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center space-x-4 z-10">
+             <div className="text-right hidden sm:block">
+               <span className="text-[10px] text-neur-subtext uppercase font-black tracking-[0.3em] block mb-1">Invoke Sequence</span>
+               <span className="text-[11px] text-white font-bold tracking-widest uppercase">Scenario Horizon</span>
+             </div>
+             <div className={`p-4 rounded-2xl border ${proactiveAdvice.priority === 'HIGH' ? 'border-neur-danger/40 text-neur-danger' : 'border-neur-cyan/40 text-neur-cyan'} group-hover:bg-current group-hover:text-neur-bg transition-all duration-300`}>
+               <TrendingUp size={24} />
+             </div>
+          </div>
+          {/* Subtle animated background gradient pulse */}
+          <div className={`absolute -right-20 -bottom-20 w-96 h-96 rounded-full blur-[100px] opacity-10 group-hover:opacity-25 transition-opacity duration-700 ${proactiveAdvice.priority === 'HIGH' ? 'bg-neur-danger' : 'bg-neur-cyan'}`}></div>
+        </div>
       </div>
-      <div className="bg-neur-card rounded-xl border border-white/5 p-0 relative overflow-hidden flex-1 min-h-[200px]">
-        <ConsensusMonitor proposals={proposals} />
+    )}
+
+    <div className="col-span-1 md:col-span-8 bg-neur-card rounded-3xl border border-neur-cyan/20 p-6 flex flex-col h-[450px] lg:h-[550px] relative shadow-2xl overflow-hidden group">
+      <div className="flex justify-between items-center mb-6 z-10">
+        <h2 className="text-xs font-black flex items-center tracking-[0.4em] text-glow uppercase text-neur-cyan"><Network className="mr-3" size={18}/> Topology</h2>
+        <div className="text-[10px] text-neur-cyan font-mono tracking-widest px-4 py-2 bg-neur-cyan/10 rounded-xl border border-neur-cyan/20">LATTICE: STABLE</div>
       </div>
+      <div className="flex-1 relative rounded-2xl overflow-hidden border border-white/5"><NetworkGraph nodes={nodes} /></div>
     </div>
-    
-    {/* Bottom metrics row */}
-    <div className="col-span-1 md:col-span-12 grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <MetricCard label="Quantum Fidelity" value="99.4%" trend="+0.1%" trendUp={true} />
-      <MetricCard label="Knowledge Graph" value="14.2M" sub="Entities" />
-      <MetricCard label="Learning Rate" value="0.042" sub="η (Adaptive)" />
-      <MetricCard label="Threat Level" value="LOW" sub="Sigma-Matrix" />
+    <div className="col-span-1 md:col-span-4 space-y-6 flex flex-col h-full">
+      <div className="bg-neur-card rounded-3xl border border-neur-cyan/20 p-6 flex-1 flex flex-col items-center justify-center shadow-xl"><EthicalCompass metrics={metrics} /></div>
+      <div className="bg-neur-card rounded-3xl border border-neur-cyan/20 p-0 overflow-hidden flex-1 shadow-xl"><ConsensusMonitor proposals={proposals} /></div>
     </div>
   </div>
 );
 
-const MetricCard: React.FC<{ label: string, value: string, trend?: string, trendUp?: boolean, sub?: string }> = ({ label, value, trend, trendUp, sub }) => (
-  <div className="bg-neur-card border border-white/5 p-4 rounded-lg">
-    <div className="text-neur-subtext text-xs uppercase mb-1">{label}</div>
-    <div className="flex items-end justify-between">
-      <div className="text-2xl font-bold font-mono">{value}</div>
-      {trend && (
-        <div className={`text-xs ${trendUp ? 'text-green-400' : 'text-red-400'}`}>{trend}</div>
-      )}
-      {sub && (
-        <div className="text-xs text-neur-subtext">{sub}</div>
-      )}
-    </div>
+const LogoIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <div className={`relative ${className} group`}>
+    <div className="absolute inset-0 bg-neur-cyan rounded-xl opacity-30 blur-lg"></div>
+    <div className="relative w-full h-full rounded-xl border-2 border-neur-cyan flex items-center justify-center bg-neur-bg"><Zap size={20} className="text-neur-cyan drop-shadow-[0_0_5px_#00f2ff]" /></div>
   </div>
 );
 
 const EchoNodeManager: React.FC<{ nodes: EchoNode[], proposals: ConsensusProposal[] }> = ({ nodes, proposals }) => {
   const activeProposal = proposals.find(p => p.status === 'VOTING') || null;
-  
   return (
-    <div className="space-y-6 pb-20">
-        {/* Visualizer Section */}
-        <div className="w-full h-[350px] bg-neur-card/30 rounded-xl border border-white/5 overflow-hidden relative">
-             <div className="absolute top-3 left-4 z-10 flex items-center space-x-2">
-                <GitMerge size={18} className="text-neur-cyan" />
-                <h2 className="text-sm font-bold text-white uppercase tracking-wider">Collaboration Mesh</h2>
+    <div className="space-y-8 pb-12">
+        <div className="w-full h-[400px] md:h-[500px] bg-neur-card rounded-3xl border border-neur-cyan/20 overflow-hidden relative shadow-2xl">
+             <div className="absolute top-6 left-6 z-10 flex items-center space-x-4 glass-panel px-6 py-3 rounded-2xl border border-neur-cyan/40">
+                <GitMerge size={20} className="text-neur-cyan" /><h2 className="text-[11px] font-black text-white uppercase tracking-[0.3em]">Lattice Visualizer</h2>
              </div>
              <CollaborationVisualizer nodes={nodes} activeProposal={activeProposal} />
         </div>
-
-        {/* Node Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {nodes.map(node => (
-            <div key={node.id} className="bg-neur-card border border-white/5 p-4 rounded-lg hover:border-neur-cyan/30 transition-colors group">
-                <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold
-                    ${node.status === 'Corrupted' ? 'bg-red-500 animate-pulse text-white' : 
-                      node.role === 'Security' ? 'bg-red-500/20 text-red-400' : 
-                        node.role === 'Ethical' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                    {node.role.substring(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                    <div className="font-bold text-sm text-white group-hover:text-neur-cyan transition-colors">{node.name}</div>
-                    <div className="text-xs text-neur-subtext">{node.status === 'Corrupted' ? 'THREAT DETECTED' : `${node.role} Unit`}</div>
-                    </div>
+            <div key={node.id} className="bg-neur-card border border-neur-cyan/10 p-6 rounded-3xl hover:border-neur-cyan/50 transition-all cursor-pointer relative overflow-hidden group">
+                <div className="flex justify-between items-start mb-6">
+                    <div className="w-14 h-14 rounded-2xl border-2 border-neur-cyan/30 flex items-center justify-center text-[11px] font-black text-neur-cyan group-hover:bg-neur-cyan group-hover:text-neur-bg transition-all">{node.role.slice(0, 2).toUpperCase()}</div>
+                    <div className={`text-[10px] font-mono ${node.status === 'Processing' ? 'text-neur-cyan' : 'text-neur-subtext'}`}>{node.status.toUpperCase()}</div>
                 </div>
-                <div className={`w-2 h-2 rounded-full ${node.status === 'Processing' ? 'bg-neur-cyan animate-pulse' : node.status === 'Corrupted' ? 'bg-red-500 animate-ping' : 'bg-gray-600'}`}></div>
-                </div>
-                
-                <div className="space-y-2 text-xs text-neur-subtext">
-                <div className="flex justify-between">
-                    <span>Trust Score</span>
-                    <span className="text-white font-mono">{(node.trustScore * 100).toFixed(0)}</span>
-                </div>
-                <div className="w-full bg-neur-bg h-1 rounded overflow-hidden">
-                    <div className="bg-green-500 h-full" style={{ width: `${node.trustScore * 100}%` }}></div>
-                </div>
-                </div>
+                <div className="font-black text-sm mb-1 tracking-[0.2em] text-white">{node.name}</div>
+                <div className="text-[10px] text-neur-subtext uppercase tracking-widest font-bold">LVL {node.level} {node.role} UNIT</div>
             </div>
             ))}
         </div>

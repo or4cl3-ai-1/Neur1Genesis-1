@@ -41,7 +41,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
     <div className="h-screen w-full bg-[#05081a] flex flex-col items-center justify-center p-8 font-mono">
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-between items-end mb-2">
-            <span className="text-neur-cyan text-sm animate-pulse">> {status}</span>
+            <span className="text-neur-cyan text-sm animate-pulse">&gt; {status}</span>
             <span className="text-neur-purple font-bold">{progress}%</span>
         </div>
         
