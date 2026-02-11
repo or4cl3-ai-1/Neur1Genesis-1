@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { QuantumGate } from '../types';
 import { Play, RotateCcw, Activity, Info, Zap } from 'lucide-react';
-import { simulateQuantumExecution, isApiKeySet } from '../services/geminiService';
+import { simulateQuantumExecution, isApiKeySet } from '../services/huggingFaceService';
 
 const QUBIT_COUNT = 4;
 const STEPS = 8;
