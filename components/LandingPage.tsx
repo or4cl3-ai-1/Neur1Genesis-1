@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, Cpu, ShieldCheck, Zap, Brain } from 'lucide-react';
 
 interface LandingPageProps {
