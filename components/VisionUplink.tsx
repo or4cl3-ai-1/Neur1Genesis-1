@@ -1,7 +1,6 @@
-
 import React, { useRef, useState } from 'react';
-import { Camera, RefreshCw, X, ShieldCheck, Zap } from 'lucide-react';
-import { analyzeVisualUplink } from '../services/geminiService';
+import { Camera, RefreshCw, X, ShieldCheck, Zap, AlertCircle } from 'lucide-react';
+import { analyzeVisualUplink, isApiKeySet } from '../services/huggingFaceService';
 
 interface VisionUplinkProps {
   onInsight: (text: string) => void;
@@ -32,12 +31,17 @@ const VisionUplink: React.FC<VisionUplinkProps> = ({ onInsight }) => {
     ctx?.drawImage(videoRef.current, 0, 0);
     const dataUrl = canvas.toDataURL('image/jpeg');
     setCapturedImage(dataUrl);
-    
-    setIsAnalyzing(true);
-    const result = await analyzeVisualUplink(dataUrl.split(',')[1], "Analyze this environment for potential quantum interference or system optimization markers.");
-    if (result) onInsight(result);
-    setIsAnalyzing(false);
-    
+
+    // Only analyze if API key is configured
+    if (isApiKeySet()) {
+      setIsAnalyzing(true);
+      const result = await analyzeVisualUplink(dataUrl.split(',')[1], "Analyze this environment for potential quantum interference or system optimization markers.");
+      if (result) onInsight(result);
+      setIsAnalyzing(false);
+    } else {
+      onInsight("Visual capture complete. Analysis requires HF_API_KEY configuration.");
+    }
+
     stream?.getTracks().forEach(t => t.stop());
     setStream(null);
   };
@@ -80,9 +84,17 @@ const VisionUplink: React.FC<VisionUplinkProps> = ({ onInsight }) => {
             Snapshot Entropy
           </button>
         )}
-        <div className="p-4 bg-white/5 rounded-xl border border-white/10 flex items-start space-x-3">
-          <ShieldCheck className="text-neur-cyan flex-shrink-0 mt-0.5" size={16} />
-          <p className="text-[10px] text-neur-subtext leading-relaxed font-bold tracking-widest uppercase">
+        {!isApiKeySet() && (
+          <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/40 flex items-start space-x-3">
+            <AlertCircle className="text-yellow-500 flex-shrink-0 mt-0.5" size={16} />
+            <p className="text-[10px] text-yellow-600 leading-relaxed font-bold tracking-widest uppercase">
+              Vision analysis disabled: Configure HF_API_KEY to enable image understanding.
+            </p>
+          </div>
+        )}
+        <div className={`p-4 rounded-xl border flex items-start space-x-3 ${isApiKeySet() ? 'bg-white/5 border-white/10' : 'bg-gray-500/5 border-gray-500/20'}`}>
+          <ShieldCheck className={`flex-shrink-0 mt-0.5 ${isApiKeySet() ? 'text-neur-cyan' : 'text-gray-500'}`} size={16} />
+          <p className={`text-[10px] leading-relaxed font-bold tracking-widest uppercase ${isApiKeySet() ? 'text-neur-subtext' : 'text-gray-600'}`}>
             Multimodal grounding connects physical environmental data directly to the Σ-Matrix ethical core.
           </p>
         </div>

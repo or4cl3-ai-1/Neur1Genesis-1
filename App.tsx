@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ViewState, EchoNode, SigmaMetrics, SystemLog, ConsensusProposal, Vote, SwarmTask } from './types';
 import { 
@@ -22,7 +21,7 @@ import EvolutionTree from './components/EvolutionTree';
 import StressTestLab from './components/StressTestLab';
 import TaskSwarm from './components/TaskSwarm';
 import VisionUplink from './components/VisionUplink';
-import { processDaedalusCommand, isApiKeySet, getProactiveAdvice, generateConversation } from './services/geminiService';
+import { processDaedalusCommand, isApiKeySet, getProactiveAdvice } from './services/huggingFaceService';
 import { initAudio, toggleMute, updateSonification } from './services/audioService';
 import { daedalusCore } from './services/daedalusCore';
 
@@ -149,14 +148,7 @@ const App: React.FC = () => {
         };
         setChatMessages(prev => [...prev, systemMsg]);
 
-        // Synthesize response if audio is enabled (strip tags for audio)
-        if (!isAudioMuted) {
-          const audioText = result.rawText.replace(/<daedalus_state>[\s\S]*?<\/daedalus_state>/, '').replace(/\[FINAL MANIFESTATION\]/, '').trim();
-          const audioBase64 = await generateConversation(`Daedalus: ${audioText}`);
-          if (audioBase64) {
-            playRawPcm(audioBase64);
-          }
-        }
+        // Audio synthesis disabled - using open-source models
         return result;
       }
     }
@@ -171,20 +163,6 @@ const App: React.FC = () => {
     return { response: fallbackMsg.text };
   };
 
-  const playRawPcm = async (base64: string) => {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-    const bytes = atob(base64).split('').map(c => c.charCodeAt(0));
-    const dataInt16 = new Int16Array(new Uint8Array(bytes).buffer);
-    const buffer = audioCtx.createBuffer(1, dataInt16.length, 24000);
-    const channelData = buffer.getChannelData(0);
-    for (let i = 0; i < dataInt16.length; i++) {
-      channelData[i] = dataInt16[i] / 32768.0;
-    }
-    const source = audioCtx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioCtx.destination);
-    source.start();
-  };
 
   const toggleAudio = () => {
       if (isAudioMuted) { initAudio(); setIsAudioMuted(false); toggleMute(false); }

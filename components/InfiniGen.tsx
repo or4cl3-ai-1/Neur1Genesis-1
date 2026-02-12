@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Code, Play, RefreshCw, Layers, Sparkles } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { generateCode, isApiKeySet } from '../services/huggingFaceService';
 
 const InfiniGen: React.FC = () => {
   const [prompt, setPrompt] = useState("");
@@ -11,35 +10,21 @@ const InfiniGen: React.FC = () => {
 
   const handleEvolve = async () => {
     if (!prompt.trim()) return;
-    
+
+    if (!isApiKeySet()) {
+      setCode("// ERROR: HuggingFace API key not configured.\n// Set HF_API_KEY environment variable to enable code generation.");
+      return;
+    }
+
     setIsEvolving(true);
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
     try {
-        const response = await ai.models.generateContent({
-            model: "gemini-3-pro-preview",
-            contents: `You are the InfiniGen engine in the Neur1Genesis platform. 
-            Generate highly optimized, "quantum-enhanced" TypeScript/JavaScript code for the following request: "${prompt}".
-            
-            Format:
-            - Provide a clean, modular class or function.
-            - Include comments explaining the "quantum optimization" (e.g., superposition of logic, entanglement of states).
-            - Keep the output concise and focused on code.
-            - This is generation #${generation + 1} of the evolutionary process.`,
-            config: {
-                temperature: 1,
-                topP: 0.95,
-                topK: 64,
-                thinkingConfig: { thinkingBudget: 5000 }
-            }
-        });
-
-        const generatedCode = response.text || "// Error: Could not generate code from the quantum field.";
-        setCode(generatedCode);
+        const generatedCode = await generateCode(prompt, generation);
+        setCode(generatedCode || "// Error: Could not generate code from the quantum field.");
         setGeneration(prev => prev + 1);
-    } catch (error) {
+    } catch (error: any) {
         console.error("InfiniGen Evolution Error:", error);
-        setCode(`// INFINGEN ERROR: [Quantum Coherence Lost]\n// Trace: ${error.message}`);
+        setCode(`// INFINGEN ERROR: [Quantum Coherence Lost]\n// Trace: ${error?.message || String(error)}`);
     } finally {
         setIsEvolving(false);
     }

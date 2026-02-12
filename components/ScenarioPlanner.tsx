@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Target, TrendingUp, AlertCircle, RefreshCw, ChevronRight, Play, Film, X } from 'lucide-react';
-import { generateScenarioOutcomes, generateVeoForecast } from '../services/geminiService';
+import { generateScenarioOutcomes } from '../services/huggingFaceService';
 import { ScenarioOutcome } from '../types';
 
 interface ScenarioPlannerProps {
@@ -13,25 +12,25 @@ const ScenarioPlanner: React.FC<ScenarioPlannerProps> = ({ metrics, addLog }) =>
   const [goal, setGoal] = useState("");
   const [scenarios, setScenarios] = useState<ScenarioOutcome[]>([]);
   const [isPlanning, setIsPlanning] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioOutcome | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const handlePlan = async () => {
     if (!goal.trim()) return;
     setIsPlanning(true);
     addLog('Forecaster', `Initiating recursive scenario planning for: "${goal}"`, 'info');
-    
+
     const results = await generateScenarioOutcomes(metrics, goal);
     setScenarios(results.map((r: any) => ({ ...r, id: Math.random().toString() })));
     setIsPlanning(false);
   };
 
   const handleVisualize = async (scenario: ScenarioOutcome) => {
-    setIsVideoLoading(true);
-    addLog('Forecaster', `Rendering Veo-3.1 visual for: "${scenario.title}"`, 'info');
-    const url = await generateVeoForecast(scenario.title);
-    if (url) setVideoUrl(url);
-    setIsVideoLoading(false);
+    setIsAnimating(true);
+    addLog('Forecaster', `Generating scenario visualization for: "${scenario.title}"`, 'info');
+    setSelectedScenario(scenario);
+    // Simulate animation loading
+    setTimeout(() => setIsAnimating(false), 1000);
   };
 
   return (
@@ -99,13 +98,13 @@ const ScenarioPlanner: React.FC<ScenarioPlannerProps> = ({ metrics, addLog }) =>
                 </ul>
               </div>
               <div className="flex items-end justify-end space-x-3">
-                <button 
+                <button
                   onClick={() => handleVisualize(scenario)}
-                  disabled={isVideoLoading}
+                  disabled={isAnimating}
                   className="px-6 py-3 bg-neur-purple/20 border border-neur-purple/40 rounded-xl text-[10px] text-neur-purple font-black tracking-widest hover:bg-neur-purple hover:text-white transition-all uppercase flex items-center"
                 >
-                  {isVideoLoading ? <RefreshCw className="animate-spin mr-2" size={14} /> : <Film className="mr-2" size={14} />}
-                  Veo Rendering
+                  {isAnimating ? <RefreshCw className="animate-spin mr-2" size={14} /> : <Film className="mr-2" size={14} />}
+                  Visualize
                 </button>
                 <button className="px-6 py-3 border border-neur-cyan/30 rounded-xl text-[10px] text-neur-cyan font-black tracking-widest hover:bg-neur-cyan hover:text-neur-bg transition-all uppercase">
                   Lock Sync
@@ -123,11 +122,42 @@ const ScenarioPlanner: React.FC<ScenarioPlannerProps> = ({ metrics, addLog }) =>
         )}
       </div>
 
-      {videoUrl && (
+      {selectedScenario && (
         <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in zoom-in duration-300">
-          <div className="relative w-full max-w-4xl aspect-video bg-neur-bg rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-            <video src={videoUrl} controls autoPlay className="w-full h-full object-contain" />
-            <button onClick={() => setVideoUrl(null)} className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all">
+          <div className="relative w-full max-w-4xl aspect-video bg-gradient-to-br from-neur-cyan/10 to-neur-purple/10 rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col items-center justify-center">
+            {!isAnimating && (
+              <>
+                {/* Animated visualization */}
+                <div className="relative w-64 h-64 flex items-center justify-center">
+                  {/* Central circle with pulsing animation */}
+                  <div className="absolute w-full h-full rounded-full border-2 border-neur-cyan/40 animate-pulse"></div>
+                  <div className="absolute w-4/5 h-4/5 rounded-full border-2 border-neur-purple/30 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="absolute w-3/5 h-3/5 rounded-full border-2 border-neur-cyan/20 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+
+                  {/* Center point */}
+                  <div className="absolute w-2 h-2 bg-neur-cyan rounded-full shadow-[0_0_20px_#00f2ff]"></div>
+                </div>
+
+                <div className="mt-12 text-center">
+                  <h3 className="text-2xl font-black text-white tracking-widest mb-3 uppercase">{selectedScenario.title}</h3>
+                  <p className="text-sm text-neur-cyan mb-2">Probability: {(selectedScenario.probability * 100).toFixed(0)}%</p>
+                  <p className="text-sm text-gray-400 max-w-lg">{selectedScenario.description}</p>
+                </div>
+              </>
+            )}
+
+            {isAnimating && (
+              <div className="flex flex-col items-center justify-center space-y-6">
+                <div className="w-16 h-16 border-4 border-neur-cyan/20 border-t-neur-cyan rounded-full animate-spin"></div>
+                <p className="text-neur-cyan font-black tracking-widest uppercase">Generating Visualization</p>
+              </div>
+            )}
+
+            <button
+              onClick={() => setSelectedScenario(null)}
+              className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all"
+              disabled={isAnimating}
+            >
               <X size={24} className="text-white" />
             </button>
           </div>
