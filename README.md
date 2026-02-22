@@ -1,14 +1,14 @@
 <div align="center">
 
 # ⚛️ Neur1Genesis Mobile
-### *Quantum-Enhanced Autonomous AI in Your Pocket*
+### *Quantum-Inspired Autonomous AI in Your Pocket*
 
 [![Or4cl3](https://img.shields.io/badge/Or4cl3%20AI%20Solutions-Research%20First-blueviolet?style=for-the-badge&logo=github)](https://github.com/or4cl3-ai-1)
 [![License](https://img.shields.io/badge/License-Free%20for%20Education-success?style=for-the-badge)](https://github.com/or4cl3-ai-1)
 [![Framework](https://img.shields.io/badge/Framework-React%2019%20%7C%20TypeScript%20%7C%20Gemini-informational?style=for-the-badge)](https://github.com/or4cl3-ai-1)
 [![Version](https://img.shields.io/badge/Version-1.2.0--LATTICE-blueviolet?style=for-the-badge)](https://github.com/or4cl3-ai-1)
 
-> *Neur1Genesis Mobile is the world's first mobile-native, quantum-enhanced AI platform that orchestrates a decentralized swarm of autonomous agents under verifiable ethical governance. 8-qubit quantum simulation. EchoNode evolution. Σ-Matrix alignment. All in a cyberpunk glassmorphism interface that responds to your emotions.*
+> *Neur1Genesis Mobile is a mobile-native, quantum-inspired AI platform that orchestrates a decentralized swarm of autonomous agents under verifiable ethical governance. 8-qubit quantum-inspired circuit simulation. EchoNode evolution. Σ-Matrix alignment. All in a cyberpunk glassmorphism interface that responds to your emotions.*
 
 </div>
 
@@ -18,7 +18,7 @@
 
 Neur1Genesis v1.2.0-LATTICE brings the full power of Or4cl3's autonomous agent architecture to mobile-first form. The platform orchestrates a decentralized swarm of **EchoNodes**—evolving AI agents that gain experience, unlock specialized skills, and operate under the **Σ-Matrix**: a mathematically verifiable ethical governance framework with real-time drift detection.
 
-The platform's **Hybrid Quantum-Classical Interface (HQCI)** simulates an 8-qubit quantum circuit environment for high-fidelity ethical stress testing and evolutionary scenario planning. When agents face black-swan events—Ethical Drift, Rogue Agent scenarios, Quantum Coherence Collapse—the Σ-Matrix's resilience metrics tell you exactly how the governance lattice responds.
+The platform's **Hybrid Quantum-Classical Interface (HQCI)** provides an 8-qubit quantum-inspired simulation environment (running on classical hardware) for high-fidelity ethical stress testing and evolutionary scenario planning. When agents face black-swan events—Ethical Drift, Rogue Agent scenarios, Quantum Coherence Collapse—the Σ-Matrix's resilience metrics tell you exactly how the governance lattice responds.
 
 This is not a productivity app. This is a mobile command center for synthetic intelligence.
 
@@ -30,7 +30,7 @@ This is not a productivity app. This is a mobile command center for synthetic in
 - **🔭 Visionary Multimodal Uplink:** Device camera integration for physical-world grounding and lattice alignment analysis.
 - **🔮 Generative Scenario Forecasting:** Gemini 3 Pro high-reasoning simulations with Veo-3.1 cinematic video previews of simulated futures.
 - **💚 Empathetic Bio-Aura UI:** Sentiment-aware interface that shifts visual theme and AI persona based on user emotional state.
-- **⚛️ 8-Qubit HQCI Quantum Lab:** Drag-and-drop circuit builder for quantum gates (H, X, Z, T, CNOT) with probabilistic execution and state vector analysis.
+- **⚛️ 8-Qubit HQCI Quantum Lab:** Drag-and-drop circuit builder for quantum gates (H, X, Z, T, CNOT) with probabilistic execution and state vector analysis — implemented as quantum-inspired classical simulation.
 - **📊 PAS Scoring (Perception-Action-Sentiment):** Real-time monitoring for provable ethical convergence with Explainable AI rationale for every decision.
 - **🎤 Synthetix TTS:** High-fidelity multi-speaker native audio featuring distinct personas for Daedalus and System Core.
 
