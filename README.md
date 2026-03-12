@@ -365,3 +365,8 @@ Commercial licensing: contact [dgroves003@gmail.com](mailto:dgroves003@gmail.com
 *Solo-founded by Dustin Groves · Research-first · Uncompromised*
 
 </div>
+
+## License
+
+This project is licensed under the **Or4cl3 Open Model License (OOML) v1.0**.
+See [LICENSE.md](LICENSE.md) for full terms.
